@@ -25,13 +25,15 @@ iframe{width:100%;border:none;display:block;min-height:800px}
   <a href="#" onclick="show('search');return false" id="btn-search" class="active">🔍 搜尋篩選</a>
   <a href="#" onclick="show('charts');return false" id="btn-charts">📊 統計分析</a>
   <a href="#" onclick="show('calc');return false" id="btn-calc">🧮 價格計算</a>
+  <a href="#" onclick="show('nearby');return false" id="btn-nearby">📍 周邊機能</a>
 </div>
 <iframe id="f-search" src="widget-1-search.html"></iframe>
 <iframe id="f-charts" src="widget-2-charts.html" style="display:none"></iframe>
 <iframe id="f-calc" src="widget-3-calculator.html" style="display:none"></iframe>
+<iframe id="f-nearby" src="widget-4-nearby.html" style="display:none;min-height:900px"></iframe>
 <script>
 function show(tab){
-  ['search','charts','calc'].forEach(t=>{
+  ['search','charts','calc','nearby'].forEach(t=>{
     document.getElementById('f-'+t).style.display = t===tab?'block':'none';
     document.getElementById('btn-'+t).classList.toggle('active', t===tab);
   });
