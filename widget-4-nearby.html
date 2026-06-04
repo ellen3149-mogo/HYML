@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>周邊生活機能查詢</title>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<style>
+:root{--primary:#1a3a5c;--accent:#e8732a;--accent2:#2a9d8f;--border:#dde3ee;--bg:#f4f7fb;--shadow:0 2px 12px rgba(26,58,92,0.08)}
+*{box-sizing:border-box}
+body{background:var(--bg);font-family:'Microsoft JhengHei',sans-serif;margin:0;padding:12px;color:#222}
+.card{background:#fff;border-radius:12px;box-shadow:var(--shadow);border:1px solid var(--border);padding:16px;margin-bottom:14px}
+.section-title{font-size:1.05rem;font-weight:700;color:var(--primary);border-left:4px solid var(--accent);padding-left:10px;margin-bottom:14px}
+label{font-size:.83rem;font-weight:600;color:var(--primary);margin-bottom:4px;display:block}
+.form-ctrl{width:100%;border:1px solid var(--border);border-radius:8px;padding:.38rem .65rem;font-size:.88rem;outline:none;font-family:inherit;transition:.15s}
+.form-ctrl:focus{border-color:var(--accent);box-shadow:0 0 0 2px rgba(232,115,42,.15)}
+.btn-search{background:var(--accent);border:none;color:#fff;border-radius:8px;font-weight:600;padding:.45rem 1.2rem;font-size:.88rem;cursor:pointer;transition:.15s}
+.btn-search:hover{background:#c9611d}
+.btn-search:disabled{background:#ccc;cursor:not-allowed}
+#map{height:420px;border-radius:10px;border:1px solid var(--border);margin-bottom:14px}
+.facility-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px;margin-bottom:14px}
+.facility-btn{border:2px solid var(--border);border-radius:8px;padding:8px 6px;text-align:center;cursor:pointer;background:#fff;transition:.15s;font-size:.82rem;font-weight:600;color:#555}
+.facility-btn.active{border-color:var(--accent);background:#fff5ef;color:var(--accent)}
+.facility-btn i{display:block;font-size:1.4rem;margin-bottom:4px}
+.result-list{max-height:320px;overflow-y:auto}
+.result-item{display:flex;align-items:flex-start;gap:10px;padding:10px 12px;border-bottom:1px solid #f0f3fa;cursor:pointer;transition:.1s}
+.result-item:hover{background:#f4f7fb}
+.result-item:last-child{border-bottom:none}
+.result-icon{font-size:1.3rem;min-width:28px;text-align:center;margin-top:2px}
+.result-name{font-weight:600;font-size:.88rem;color:var(--primary)}
+.result-dist{font-size:.78rem;color:var(--accent);font-weight:600}
+.result-addr{font-size:.76rem;color:#888;margin-top:2px}
+.stat-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.stat-pill{background:#fff;border:1px solid var(--border);border-radius:10px;padding:8px 14px;flex:1;min-width:100px;box-shadow:var(--shadow);text-align:center}
+.stat-pill .sv{font-size:1.3rem;font-weight:700;color:var(--primary)}
+.stat-pill .sl{font-size:.72rem;color:#6c7a94;margin-top:2px}
+.loading-bar{height:4px;background:linear-gradient(90deg,var(--accent) 0%,var(--accent2) 100%);border-radius:2px;animation:slide 1.2s ease-in-out infinite;display:none}
+@keyframes slide{0%{transform:translateX(-100%)}100%{transform:translateX(400%)}}
+.badge-type{display:inline-block;border-radius:6px;padding:2px 8px;font-size:.75rem;font-weight:600}
+.empty-state{text-align:center;padding:32px;color:#aaa}
+.empty-state i{font-size:2.5rem;display:block;margin-bottom:8px}
+.dist-badge{background:#e8f0fe;color:var(--primary);border-radius:5px;padding:2px 7px;font-size:.75rem;font-weight:600;white-space:nowrap}
+.addr-input-row{display:grid;grid-template-columns:1fr auto auto;gap:8px;align-items:end}
+.radius-sel{width:110px}
+.hint{font-size:.75rem;color:#888;margin-top:4px}
+</style>
+</head>
+<body>
+
+<!-- 搜尋區 -->
+<div class="card">
+  <div class="section-title">📍 周邊生活機能查詢</div>
+  <div class="addr-input-row">
+    <div>
+      <label>輸入地址或建案名稱</label>
+      <input class="form-ctrl" id="addr-input" placeholder="例：新北市板橋區文化路、國揚數位科技大樓…" onkeydown="if(event.key==='Enter')searchAddr()">
+      <div class="hint">輸入後按「定位」，再選擇要查詢的設施類型</div>
+    </div>
+    <div>
+      <label>搜尋半徑</label>
+      <select class="form-ctrl radius-sel" id="radius-sel">
+        <option value="500">500 公尺</option>
+        <option value="1000" selected>1 公里</option>
+        <option value="1500">1.5 公里</option>
+        <option value="2000">2 公里</option>
+      </select>
+    </div>
+    <div>
+      <label>&nbsp;</label>
+      <button class="btn-search" onclick="searchAddr()" id="btn-locate">
+        <i class="bi bi-geo-alt-fill me-1"></i>定位
+      </button>
+    </div>
+  </div>
+  <div class="loading-bar mt-2" id="loading-bar"></div>
+</div>
+
+<!-- 設施類型選擇 -->
+<div class="card" id="facility-card" style="display:none">
+  <div class="section-title">選擇查詢設施類型（可複選）</div>
+  <div class="facility-grid">
+    <div class="facility-btn active" data-type="hospital" onclick="toggleFacility(this)">
+      <i class="bi bi-hospital" style="color:#e63946"></i>醫院診所
+    </div>
+    <div class="facility-btn active" data-type="school" onclick="toggleFacility(this)">
+      <i class="bi bi-mortarboard" style="color:#457b9d"></i>學校
+    </div>
+    <div class="facility-btn active" data-type="supermarket" onclick="toggleFacility(this)">
+      <i class="bi bi-cart3" style="color:#2a9d8f"></i>超市賣場
+    </div>
+    <div class="facility-btn active" data-type="subway" onclick="toggleFacility(this)">
+      <i class="bi bi-train-front" style="color:#6a4c93"></i>捷運站
+    </div>
+    <div class="facility-btn active" data-type="park" onclick="toggleFacility(this)">
+      <i class="bi bi-tree" style="color:#52b788"></i>公園綠地
+    </div>
+    <div class="facility-btn active" data-type="bank" onclick="toggleFacility(this)">
+      <i class="bi bi-bank" style="color:#e8732a"></i>銀行
+    </div>
+  </div>
+  <button class="btn-search" onclick="searchNearby()" id="btn-search-nearby">
+    <i class="bi bi-search me-1"></i>查詢周邊設施
+  </button>
+</div>
+
+<!-- 統計摘要 -->
+<div class="stat-row" id="stat-row" style="display:none">
+  <div class="stat-pill"><div class="sv" id="s-hospital">-</div><div class="sl">🏥 醫院診所</div></div>
+  <div class="stat-pill"><div class="sv" id="s-school">-</div><div class="sl">🎓 學校</div></div>
+  <div class="stat-pill"><div class="sv" id="s-supermarket">-</div><div class="sl">🛒 超市賣場</div></div>
+  <div class="stat-pill"><div class="sv" id="s-subway">-</div><div class="sl">🚇 捷運站</div></div>
+  <div class="stat-pill"><div class="sv" id="s-park">-</div><div class="sl">🌳 公園</div></div>
+  <div class="stat-pill"><div class="sv" id="s-bank">-</div><div class="sl">🏦 銀行</div></div>
+</div>
+
+<!-- 地圖 -->
+<div id="map"></div>
+
+<!-- 結果清單 -->
+<div class="card" id="result-card" style="display:none">
+  <div class="section-title">周邊設施清單</div>
+  <div class="result-list" id="result-list"></div>
+</div>
+
+<script>
+// ── 設施設定 ──
+const FACILITY_CONFIG = {
+  hospital: {
+    label: '醫院診所', icon: 'bi-hospital', color: '#e63946',
+    markerColor: '#e63946',
+    queries: [
+      '[amenity=hospital]', '[amenity=clinic]', '[amenity=doctors]',
+      '[healthcare=hospital]', '[healthcare=clinic]'
+    ]
+  },
+  school: {
+    label: '學校', icon: 'bi-mortarboard', color: '#457b9d',
+    markerColor: '#457b9d',
+    queries: [
+      '[amenity=school]', '[amenity=university]', '[amenity=college]',
+      '[amenity=kindergarten]'
+    ]
+  },
+  supermarket: {
+    label: '超市賣場', icon: 'bi-cart3', color: '#2a9d8f',
+    markerColor: '#2a9d8f',
+    queries: [
+      '[shop=supermarket]', '[shop=convenience]', '[shop=department_store]'
+    ]
+  },
+  subway: {
+    label: '捷運站', icon: 'bi-train-front', color: '#6a4c93',
+    markerColor: '#6a4c93',
+    queries: [
+      '[station=subway]', '[railway=station][network]',
+      '[amenity=subway_entrance]'
+    ]
+  },
+  park: {
+    label: '公園綠地', icon: 'bi-tree', color: '#52b788',
+    markerColor: '#52b788',
+    queries: [
+      '[leisure=park]', '[leisure=garden]', '[landuse=recreation_ground]'
+    ]
+  },
+  bank: {
+    label: '銀行', icon: 'bi-bank', color: '#e8732a',
+    markerColor: '#e8732a',
+    queries: [
+      '[amenity=bank]', '[amenity=atm]'
+    ]
+  }
+};
+
+let map, centerMarker, allResults = {}, currentLat, currentLng;
+const layerGroups = {};
+
+// 初始化地圖
+function initMap(lat, lng) {
+  if (map) { map.remove(); }
+  map = L.map('map').setView([lat, lng], 15);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© <a href="https://openstreetmap.org">OpenStreetMap</a>',
+    maxZoom: 19
+  }).addTo(map);
+  Object.keys(FACILITY_CONFIG).forEach(type => {
+    layerGroups[type] = L.layerGroup().addTo(map);
+  });
+}
+
+function addCenterMarker(lat, lng, label) {
+  if (centerMarker) map.removeLayer(centerMarker);
+  const icon = L.divIcon({
+    className: '',
+    html: `<div style="background:#1a3a5c;color:#fff;border-radius:50%;width:36px;height:36px;display:flex;align-items:center;justify-content:center;font-size:1.1rem;box-shadow:0 2px 8px rgba(0,0,0,0.3);border:2px solid #fff">📍</div>`,
+    iconSize: [36, 36], iconAnchor: [18, 18]
+  });
+  centerMarker = L.marker([lat, lng], { icon }).addTo(map)
+    .bindPopup(`<b>${label}</b><br>查詢中心點`).openPopup();
+}
+
+function makeIcon(type) {
+  const cfg = FACILITY_CONFIG[type];
+  return L.divIcon({
+    className: '',
+    html: `<div style="background:${cfg.markerColor};color:#fff;border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-size:.85rem;box-shadow:0 1px 5px rgba(0,0,0,0.3);border:2px solid #fff">
+      <i class="bi ${cfg.icon}"></i></div>`,
+    iconSize: [28, 28], iconAnchor: [14, 14]
+  });
+}
+
+// 地址定位（Nominatim）
+async function searchAddr() {
+  const addr = document.getElementById('addr-input').value.trim();
+  if (!addr) return alert('請輸入地址或建案名稱');
+  setLoading(true);
+  try {
+    const query = addr.includes('新北') ? addr : '新北市 ' + addr;
+    const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&limit=1&accept-language=zh-TW&countrycodes=tw`;
+    const res = await fetch(url, { headers: { 'Accept-Language': 'zh-TW' } });
+    const data = await res.json();
+    if (!data.length) {
+      alert('找不到此地址，請嘗試更詳細的地址，例如加上行政區名稱');
+      setLoading(false); return;
+    }
+    currentLat = parseFloat(data[0].lat);
+    currentLng = parseFloat(data[0].lon);
+    initMap(currentLat, currentLng);
+    addCenterMarker(currentLat, currentLng, addr);
+    document.getElementById('facility-card').style.display = 'block';
+    document.getElementById('stat-row').style.display = 'none';
+    document.getElementById('result-card').style.display = 'none';
+    allResults = {};
+  } catch(e) {
+    alert('定位失敗，請檢查網路連線');
+  }
+  setLoading(false);
+}
+
+// 取得啟用的設施類型
+function getActiveTypes() {
+  return [...document.querySelectorAll('.facility-btn.active')].map(b => b.dataset.type);
+}
+
+// 查詢周邊設施（Overpass API）
+async function searchNearby() {
+  if (!currentLat) return alert('請先輸入地址定位');
+  const types = getActiveTypes();
+  if (!types.length) return alert('請至少選擇一種設施類型');
+  const radius = parseInt(document.getElementById('radius-sel').value);
+
+  setLoading(true);
+  document.getElementById('btn-search-nearby').disabled = true;
+  document.getElementById('result-card').style.display = 'none';
+
+  // 清除舊標記
+  Object.values(layerGroups).forEach(lg => lg.clearLayers());
+  allResults = {};
+
+  // 建立 Overpass 查詢（一次查全部類型）
+  let queryParts = [];
+  types.forEach(type => {
+    FACILITY_CONFIG[type].queries.forEach(q => {
+      queryParts.push(`node${q}(around:${radius},${currentLat},${currentLng});`);
+      queryParts.push(`way${q}(around:${radius},${currentLat},${currentLng});`);
+    });
+  });
+
+  const overpassQuery = `[out:json][timeout:25];(${queryParts.join('')});out center;`;
+
+  try {
+    const res = await fetch('https://overpass-api.de/api/interpreter', {
+      method: 'POST',
+      body: overpassQuery
+    });
+    const data = await res.json();
+    processResults(data.elements, types, radius);
+  } catch(e) {
+    // 備用 API
+    try {
+      const res2 = await fetch('https://overpass.kumi.systems/api/interpreter', {
+        method: 'POST', body: overpassQuery
+      });
+      const data2 = await res2.json();
+      processResults(data2.elements, types, radius);
+    } catch(e2) {
+      alert('查詢失敗，請稍後再試');
+    }
+  }
+
+  setLoading(false);
+  document.getElementById('btn-search-nearby').disabled = false;
+}
+
+function classifyElement(el, types) {
+  const t = el.tags || {};
+  for (const type of types) {
+    const cfg = FACILITY_CONFIG[type];
+    if (type === 'hospital' && (t.amenity === 'hospital' || t.amenity === 'clinic' || t.amenity === 'doctors' || t.healthcare)) return type;
+    if (type === 'school' && (t.amenity === 'school' || t.amenity === 'university' || t.amenity === 'college' || t.amenity === 'kindergarten')) return type;
+    if (type === 'supermarket' && (t.shop === 'supermarket' || t.shop === 'convenience' || t.shop === 'department_store')) return type;
+    if (type === 'subway' && (t.station === 'subway' || t.amenity === 'subway_entrance' || (t.railway === 'station' && t.network))) return type;
+    if (type === 'park' && (t.leisure === 'park' || t.leisure === 'garden' || t.landuse === 'recreation_ground')) return type;
+    if (type === 'bank' && (t.amenity === 'bank' || t.amenity === 'atm')) return type;
+  }
+  return null;
+}
+
+function calcDist(lat1, lng1, lat2, lng2) {
+  const R = 6371000;
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLng = (lng2 - lng1) * Math.PI / 180;
+  const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLng/2)**2;
+  return Math.round(R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)));
+}
+
+function processResults(elements, types, radius) {
+  const seen = new Set();
+  types.forEach(t => allResults[t] = []);
+
+  elements.forEach(el => {
+    const lat = el.lat || (el.center && el.center.lat);
+    const lng = el.lon || (el.center && el.center.lon);
+    if (!lat || !lng) return;
+
+    const name = el.tags?.name || el.tags?.['name:zh'] || '';
+    if (!name) return;
+
+    const key = name + lat + lng;
+    if (seen.has(key)) return;
+    seen.add(key);
+
+    const type = classifyElement(el, types);
+    if (!type) return;
+
+    const dist = calcDist(currentLat, currentLng, lat, lng);
+    if (dist > radius) return;
+
+    const addr = el.tags?.['addr:full'] || el.tags?.['addr:street'] || '';
+    allResults[type].push({ name, lat, lng, dist, addr, type });
+  });
+
+  // 排序 & 加標記
+  types.forEach(type => {
+    allResults[type].sort((a, b) => a.dist - b.dist);
+    allResults[type].forEach(item => {
+      const icon = makeIcon(type);
+      const marker = L.marker([item.lat, item.lng], { icon }).addTo(layerGroups[type]);
+      marker.bindPopup(`<b>${item.name}</b><br><span style="color:${FACILITY_CONFIG[type].color}">${FACILITY_CONFIG[type].label}</span><br>距離：${item.dist} 公尺`);
+      item.marker = marker;
+    });
+  });
+
+  renderStats(types);
+  renderList(types);
+  document.getElementById('stat-row').style.display = 'flex';
+  document.getElementById('result-card').style.display = 'block';
+}
+
+function renderStats(types) {
+  const labels = { hospital:'s-hospital', school:'s-school', supermarket:'s-supermarket', subway:'s-subway', park:'s-park', bank:'s-bank' };
+  Object.keys(labels).forEach(type => {
+    const el = document.getElementById(labels[type]);
+    if (el) el.textContent = (allResults[type] || []).length;
+  });
+}
+
+function renderList(types) {
+  const list = document.getElementById('result-list');
+  const items = [];
+  types.forEach(type => (allResults[type] || []).forEach(item => items.push(item)));
+  items.sort((a, b) => a.dist - b.dist);
+
+  if (!items.length) {
+    list.innerHTML = `<div class="empty-state"><i class="bi bi-search"></i>此範圍內未找到相關設施<br><small>可嘗試擴大搜尋半徑</small></div>`;
+    return;
+  }
+
+  list.innerHTML = items.map((item, i) => {
+    const cfg = FACILITY_CONFIG[item.type];
+    const distTxt = item.dist < 1000 ? `${item.dist} 公尺` : `${(item.dist/1000).toFixed(1)} 公里`;
+    return `<div class="result-item" onclick="flyTo(${item.lat},${item.lng},'${item.name.replace(/'/g,"\\'")}','${item.type}')">
+      <div class="result-icon"><i class="bi ${cfg.icon}" style="color:${cfg.color}"></i></div>
+      <div style="flex:1;min-width:0">
+        <div class="result-name">${item.name}</div>
+        ${item.addr ? `<div class="result-addr">${item.addr}</div>` : ''}
+        <span style="background:${cfg.color}15;color:${cfg.color};border-radius:4px;padding:1px 7px;font-size:.73rem;font-weight:600">${cfg.label}</span>
+      </div>
+      <div class="result-dist">${distTxt}</div>
+    </div>`;
+  }).join('');
+}
+
+function flyTo(lat, lng, name, type) {
+  map.flyTo([lat, lng], 17, { duration: 0.8 });
+  const cfg = FACILITY_CONFIG[type];
+  setTimeout(() => {
+    layerGroups[type].eachLayer(layer => {
+      const pos = layer.getLatLng();
+      if (Math.abs(pos.lat - lat) < 0.0001 && Math.abs(pos.lng - lng) < 0.0001) {
+        layer.openPopup();
+      }
+    });
+  }, 900);
+}
+
+function toggleFacility(btn) {
+  btn.classList.toggle('active');
+}
+
+function setLoading(on) {
+  document.getElementById('loading-bar').style.display = on ? 'block' : 'none';
+  document.getElementById('btn-locate').disabled = on;
+  document.getElementById('btn-locate').innerHTML = on
+    ? '<span class="spinner-border spinner-border-sm me-1"></span>定位中...'
+    : '<i class="bi bi-geo-alt-fill me-1"></i>定位';
+}
+
+// 若有從主系統傳入的地址參數，自動帶入
+window.addEventListener('message', e => {
+  if (e.data && e.data.address) {
+    document.getElementById('addr-input').value = e.data.address;
+  }
+});
+</script>
+</body>
+</html>
