@@ -4,46 +4,1502 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>新北市預售屋實價登錄查詢系統</title>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <style>
-body{margin:0;font-family:'Microsoft JhengHei',sans-serif;background:#f4f7fb;color:#222}
-.hero{background:#1a3a5c;color:#fff;padding:2rem 2rem 1.5rem;text-align:center}
-.hero h1{margin:0 0 .4rem;font-size:1.6rem}
-.hero p{margin:0;opacity:.75;font-size:.95rem}
-.nav{display:flex;justify-content:center;gap:10px;padding:1rem;flex-wrap:wrap;background:#fff;border-bottom:1px solid #dde3ee}
-.nav a{background:#1a3a5c;color:#fff;text-decoration:none;padding:.5rem 1.3rem;border-radius:8px;font-weight:600;font-size:.9rem;transition:.15s}
-.nav a:hover{background:#e8732a}
-.nav a.active{background:#e8732a}
-iframe{width:100%;border:none;display:block;min-height:800px}
+:root{--primary:#1a3a5c;--accent:#e8732a;--accent2:#2a9d8f;--border:#dde3ee;--bg:#f4f7fb;--shadow:0 2px 12px rgba(26,58,92,0.08)}
+*{box-sizing:border-box}
+body{background:var(--bg);font-family:'Noto Sans TC','Microsoft JhengHei',sans-serif;color:#222;margin:0}
+.navbar-custom{background:var(--primary);padding:.65rem 1.2rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;position:sticky;top:0;z-index:1000;box-shadow:0 2px 12px rgba(26,58,92,.25)}
+.navbar-brand{color:#fff;font-weight:700;font-size:1rem}
+.tab-btns{display:flex;gap:6px;flex-wrap:wrap}
+.tab-btn{background:rgba(255,255,255,.13);border:none;color:rgba(255,255,255,.82);padding:.42rem 1rem;border-radius:7px;font-size:.87rem;cursor:pointer;font-family:inherit;transition:.15s}
+.tab-btn:hover,.tab-btn.active{background:var(--accent);color:#fff}
+.tab-panel{display:none;padding:14px}
+.tab-panel.active{display:block}
+
+:root{--primary:#1a3a5c;--accent:#e8732a;--accent2:#2a9d8f;--border:#dde3ee;--bg:#f4f7fb;--shadow:0 2px 12px rgba(26,58,92,0.08)}
+*{box-sizing:border-box}
+body{background:var(--bg);font-family:'Noto Sans TC','Microsoft JhengHei',sans-serif;color:#222;margin:0;padding:12px}
+.filter-card{background:#fff;border-radius:12px;box-shadow:var(--shadow);border:1px solid var(--border);padding:16px;margin-bottom:12px}
+.section-title{font-size:1.05rem;font-weight:700;color:var(--primary);border-left:4px solid var(--accent);padding-left:10px;margin-bottom:14px}
+label{font-size:.82rem;font-weight:600;color:var(--primary);margin-bottom:3px;display:block}
+.form-select,.form-control{border-color:var(--border);font-size:.85rem;border-radius:8px;padding:.35rem .65rem}
+.form-select:focus,.form-control:focus{border-color:var(--accent);box-shadow:0 0 0 2px rgba(232,115,42,.15)}
+.btn-search{background:var(--accent);border:none;color:#fff;border-radius:8px;font-weight:600;padding:.42rem 1.1rem;font-size:.88rem;cursor:pointer;transition:.15s}
+.btn-search:hover{background:#c9611d}
+.btn-reset{background:var(--primary);border:none;color:#fff;border-radius:8px;font-weight:600;padding:.42rem 1rem;font-size:.88rem;cursor:pointer;transition:.15s}
+.btn-reset:hover{background:#0f2238}
+.table-card{background:#fff;border-radius:12px;box-shadow:var(--shadow);border:1px solid var(--border);overflow:hidden}
+.table-wrap{max-height:440px;overflow-y:auto}
+table{width:100%;border-collapse:collapse;font-size:.82rem}
+thead th{background:var(--primary);color:#fff;padding:9px 10px;white-space:nowrap;position:sticky;top:0;z-index:2;cursor:pointer;user-select:none;border:none}
+thead th:hover{background:#12294a}
+tbody td{padding:7px 10px;border-bottom:1px solid #eef1f8;vertical-align:middle}
+tbody tr:hover{background:#f0f5ff}
+.badge-res{background:#e3f0ff;color:#1a5da0;border-radius:5px;padding:2px 7px;font-size:.75rem;font-weight:600}
+.badge-ind{background:#e8f5e9;color:#1b5e20;border-radius:5px;padding:2px 7px;font-size:.75rem;font-weight:600}
+.badge-com{background:#fff3e0;color:#b55d00;border-radius:5px;padding:2px 7px;font-size:.75rem;font-weight:600}
+.badge-other{background:#f3e5f5;color:#6a1b9a;border-radius:5px;padding:2px 7px;font-size:.75rem;font-weight:600}
+.dist-badge{background:#e8f0fe;color:#1a3a5c;border-radius:5px;padding:2px 8px;font-size:.78rem;font-weight:600}
+.price-val{color:var(--accent);font-weight:700}
+.footer-bar{display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:#f8faff;border-top:1px solid var(--border);flex-wrap:wrap;gap:6px}
+.pagination{display:flex;gap:3px;list-style:none;margin:0;padding:0}
+.pagination li a{display:block;padding:3px 9px;border:1px solid var(--border);border-radius:5px;color:var(--primary);text-decoration:none;font-size:.8rem;cursor:pointer}
+.pagination li.active a{background:var(--accent);border-color:var(--accent);color:#fff}
+.pagination li.disabled a{opacity:.4;pointer-events:none}
+.result-info{font-size:.8rem;color:#6c7a94}
+.loading-overlay{position:fixed;inset:0;background:rgba(255,255,255,.9);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:999;gap:12px}
+.spinner{width:36px;height:36px;border:4px solid #dde3ee;border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-text{color:var(--primary);font-weight:600;font-size:.95rem}
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:1000;align-items:center;justify-content:center}
+.modal-overlay.show{display:flex}
+.modal-box{background:#fff;border-radius:14px;width:92%;max-width:560px;max-height:85vh;overflow-y:auto;box-shadow:0 8px 40px rgba(0,0,0,.2)}
+.modal-header{background:var(--primary);color:#fff;padding:14px 18px;border-radius:14px 14px 0 0;display:flex;justify-content:space-between;align-items:center}
+.modal-header h6{margin:0;font-weight:700;font-size:.95rem}
+.modal-close{background:none;border:none;color:#fff;font-size:1.2rem;cursor:pointer;opacity:.8}
+.modal-close:hover{opacity:1}
+.modal-body{padding:14px 18px}
+.detail-row{display:flex;padding:6px 0;border-bottom:1px solid #f0f3fa;font-size:.88rem}
+.detail-label{font-weight:600;color:var(--primary);width:100px;flex-shrink:0}
+.detail-val{color:#333}
+.highlight{color:var(--accent);font-weight:700}
+.stat-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.stat-pill{background:#fff;border:1px solid var(--border);border-radius:10px;padding:8px 14px;flex:1;min-width:120px;box-shadow:var(--shadow)}
+.stat-pill .sv{font-size:1.2rem;font-weight:700;color:var(--primary)}
+.stat-pill .sl{font-size:.75rem;color:#6c7a94}
+
+
+:root{--primary:#1a3a5c;--accent:#e8732a;--accent2:#2a9d8f;--border:#dde3ee;--bg:#f4f7fb;--shadow:0 2px 12px rgba(26,58,92,0.08)}
+*{box-sizing:border-box}
+body{background:var(--bg);font-family:'Noto Sans TC','Microsoft JhengHei',sans-serif;color:#222;margin:0;padding:12px}
+.card{background:#fff;border-radius:12px;box-shadow:var(--shadow);border:1px solid var(--border);padding:16px;margin-bottom:14px}
+.chart-title{font-size:.97rem;font-weight:700;color:var(--primary);margin-bottom:12px;display:flex;align-items:center;gap:7px}
+.chart-title i{color:var(--accent);font-size:1.05rem}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:680px){.grid2{grid-template-columns:1fr}}
+.stat-bar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+.stat-pill{background:#fff;border:1px solid var(--border);border-radius:10px;padding:10px 16px;flex:1;min-width:110px;box-shadow:var(--shadow)}
+.stat-pill .sv{font-size:1.25rem;font-weight:700;color:var(--primary)}
+.stat-pill .sl{font-size:.73rem;color:#6c7a94;margin-top:2px}
+.loading-overlay{position:fixed;inset:0;background:rgba(255,255,255,.9);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:999;gap:12px}
+.spinner{width:36px;height:36px;border:4px solid #dde3ee;border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-text{color:var(--primary);font-weight:600}
+.section-title{font-size:1.05rem;font-weight:700;color:var(--primary);border-left:4px solid var(--accent);padding-left:10px;margin-bottom:14px}
+.dist-filter{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.dist-btn{background:#e8f0fe;color:var(--primary);border:1px solid var(--border);border-radius:20px;padding:3px 12px;font-size:.8rem;cursor:pointer;font-weight:600;transition:.15s}
+.dist-btn:hover,.dist-btn.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+
+
+:root{--primary:#1a3a5c;--accent:#e8732a;--accent2:#2a9d8f;--border:#dde3ee;--bg:#f4f7fb;--shadow:0 2px 12px rgba(26,58,92,0.08)}
+*{box-sizing:border-box}
+body{background:var(--bg);font-family:'Noto Sans TC','Microsoft JhengHei',sans-serif;color:#222;margin:0;padding:12px}
+.card{background:#fff;border-radius:12px;box-shadow:var(--shadow);border:1px solid var(--border);padding:18px;margin-bottom:14px}
+.section-title{font-size:1.05rem;font-weight:700;color:var(--primary);border-left:4px solid var(--accent);padding-left:10px;margin-bottom:14px}
+label{font-size:.83rem;font-weight:600;color:var(--primary);margin-bottom:4px;display:block}
+.form-ctrl{width:100%;border:1px solid var(--border);border-radius:8px;padding:.38rem .65rem;font-size:.9rem;outline:none;transition:.15s;font-family:inherit}
+.form-ctrl:focus{border-color:var(--accent);box-shadow:0 0 0 2px rgba(232,115,42,.15)}
+select.form-ctrl{cursor:pointer}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:620px){.grid2{grid-template-columns:1fr}}
+.result-box{background:var(--primary);color:#fff;border-radius:10px;padding:14px 16px;margin-top:14px}
+.result-box .rl{font-size:.78rem;opacity:.75;margin-bottom:2px}
+.result-box .rv{font-size:1.3rem;font-weight:700}
+.result-box .rv.accent{color:#ffd166}
+.result-row{display:flex;gap:16px;flex-wrap:wrap}
+.result-col{flex:1;min-width:100px}
+.monthly-note{font-size:.78rem;opacity:.7;margin-top:8px;padding-top:8px;border-top:1px solid rgba(255,255,255,.2)}
+.ref-table{width:100%;border-collapse:collapse;font-size:.82rem}
+.ref-table th{background:var(--primary);color:#fff;padding:7px 10px;text-align:left;font-weight:600}
+.ref-table td{padding:6px 10px;border-bottom:1px solid #eef1f8;vertical-align:middle}
+.ref-table tr:hover td{background:#f0f5ff}
+.dist-badge{background:#e8f0fe;color:var(--primary);border-radius:5px;padding:2px 8px;font-size:.78rem;font-weight:600}
+.top-dist{color:var(--accent);font-weight:700}
+.hint{font-size:.78rem;color:#6c7a94;margin-top:4px}
+.range-wrap{display:flex;align-items:center;gap:8px}
+.range-wrap input[type=range]{flex:1;accent-color:var(--accent)}
+.range-val{font-weight:700;color:var(--primary);min-width:36px;font-size:.9rem}
+.tab-bar{display:flex;gap:6px;margin-bottom:14px}
+.tab-btn{flex:1;padding:8px;border:2px solid var(--border);border-radius:8px;background:#fff;color:var(--primary);font-weight:600;cursor:pointer;font-size:.88rem;transition:.15s;text-align:center}
+.tab-btn.active{border-color:var(--accent);background:var(--accent);color:#fff}
+.tab-panel{display:none}
+.tab-panel.active{display:block}
+.loading-overlay{position:fixed;inset:0;background:rgba(255,255,255,.9);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:999;gap:12px}
+.spinner{width:36px;height:36px;border:4px solid #dde3ee;border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-text{color:var(--primary);font-weight:600}
+.ref-table-wrap{max-height:340px;overflow-y:auto;border-radius:8px;border:1px solid var(--border)}
+.tag{display:inline-block;background:#e3f0ff;color:#1a5da0;border-radius:5px;padding:1px 7px;font-size:.75rem;font-weight:600;margin-left:4px}
+.tag.hot{background:#fff0e6;color:#c95e00}
+
+
+.nb-wrap{font-family:'Microsoft JhengHei',sans-serif;max-width:100%}
+.nb-search-bar{background:#fff;border-radius:14px;box-shadow:0 2px 16px rgba(26,58,92,.1);border:1px solid #dde3ee;padding:18px 20px;margin-bottom:14px}
+.nb-search-inner{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.nb-search-icon{font-size:1.6rem;flex-shrink:0}
+.nb-input{flex:1;min-width:200px;border:2px solid #dde3ee;border-radius:10px;padding:.55rem 1rem;font-size:.92rem;font-family:inherit;outline:none;transition:.2s;background:#f8faff}
+.nb-input:focus{border-color:#e8732a;background:#fff;box-shadow:0 0 0 3px rgba(232,115,42,.12)}
+.nb-radius{border:2px solid #dde3ee;border-radius:10px;padding:.5rem .6rem;font-size:.85rem;background:#fff;cursor:pointer;font-family:inherit;outline:none}
+.nb-btn-locate{background:linear-gradient(135deg,#e8732a,#c9611d);border:none;color:#fff;border-radius:10px;padding:.55rem 1.4rem;font-size:.92rem;font-weight:700;cursor:pointer;white-space:nowrap;transition:.2s;font-family:inherit}
+.nb-btn-locate:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(232,115,42,.35)}
+.nb-btn-locate:disabled{background:#ccc;transform:none;box-shadow:none;cursor:not-allowed}
+.nb-progress{height:4px;background:#f0f0f0;border-radius:2px;overflow:hidden;margin-top:12px;display:none}
+.nb-progress-bar{height:100%;width:0;background:linear-gradient(90deg,#e8732a,#2a9d8f);border-radius:2px;transition:width .3s}
+.nb-facility-bar{background:#fff;border-radius:14px;box-shadow:0 2px 16px rgba(26,58,92,.1);border:1px solid #dde3ee;padding:18px 20px;margin-bottom:14px}
+.nb-facility-title{font-weight:700;color:#1a3a5c;font-size:.95rem;margin-bottom:14px}
+.nb-facility-row{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-bottom:16px}
+@media(max-width:700px){.nb-facility-row{grid-template-columns:repeat(3,1fr)}}
+.nb-fac{border:2px solid #eee;border-radius:12px;padding:12px 6px 10px;text-align:center;cursor:pointer;transition:.2s;background:#fafafa;user-select:none}
+.nb-fac:hover{border-color:#e8732a;background:#fff5ef}
+.nb-fac.active{border-color:#e8732a;background:#fff5ef}
+.nb-fac-icon{font-size:1.5rem;width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 8px}
+.nb-fac-label{font-size:.78rem;font-weight:600;color:#444;margin-bottom:4px}
+.nb-fac-count{font-size:.85rem;font-weight:700;color:#e8732a;min-height:1.2em}
+.nb-btn-query{background:linear-gradient(135deg,#1a3a5c,#2a5f8f);border:none;color:#fff;border-radius:10px;padding:.6rem 2rem;font-size:.95rem;font-weight:700;cursor:pointer;transition:.2s;font-family:inherit}
+.nb-btn-query:hover{transform:translateY(-1px);box-shadow:0 4px 14px rgba(26,58,92,.3)}
+.nb-btn-query:disabled{background:#ccc;transform:none;cursor:not-allowed}
+.nb-main{display:grid;grid-template-columns:1fr 340px;gap:14px;align-items:start}
+@media(max-width:900px){.nb-main{grid-template-columns:1fr}}
+.nb-map-wrap{border-radius:14px;overflow:hidden;box-shadow:0 2px 16px rgba(26,58,92,.12);border:1px solid #dde3ee}
+#nb-map{height:500px}
+.nb-sidebar{background:#fff;border-radius:14px;box-shadow:0 2px 16px rgba(26,58,92,.1);border:1px solid #dde3ee;overflow:hidden;max-height:520px;display:flex;flex-direction:column}
+.nb-sidebar-header{background:#1a3a5c;color:#fff;padding:14px 16px;display:flex;justify-content:space-between;align-items:center;flex-shrink:0}
+.nb-sidebar-header span:first-child{font-weight:700;font-size:.95rem}
+.nb-total-badge{background:#e8732a;color:#fff;border-radius:12px;padding:2px 10px;font-size:.8rem;font-weight:700}
+.nb-cat-tabs{display:flex;flex-wrap:wrap;gap:4px;padding:10px 12px;border-bottom:1px solid #f0f3fa;flex-shrink:0;background:#f8faff}
+.nb-cat-tab{border:none;border-radius:20px;padding:4px 12px;font-size:.78rem;font-weight:600;cursor:pointer;transition:.15s;font-family:inherit;background:#eee;color:#666}
+.nb-list{overflow-y:auto;flex:1}
+.nb-item{display:flex;align-items:center;gap:10px;padding:11px 14px;border-bottom:1px solid #f4f6fc;cursor:pointer;transition:.15s}
+.nb-item:hover{background:#f4f7fb}
+.nb-item:last-child{border-bottom:none}
+.nb-item-icon{font-size:1.3rem;min-width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.nb-item-name{font-weight:700;font-size:.87rem;color:#1a3a5c;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.nb-item-type{font-size:.72rem;border-radius:4px;padding:1px 7px;font-weight:600;display:inline-block;margin-top:3px}
+.nb-item-dist{font-size:.82rem;font-weight:700;color:#e8732a;white-space:nowrap;flex-shrink:0}
+.nb-empty{text-align:center;padding:40px 20px;color:#bbb;font-size:.9rem}
+.nb-pulse{animation:nbpulse 1.5s ease-in-out infinite}
+@keyframes nbpulse{0%,100%{opacity:1}50%{opacity:.4}}
+
 </style>
 </head>
 <body>
-<div class="hero">
-  <h1>🏠 新北市預售屋實價登錄查詢系統</h1>
-  <p>資料來源：內政部不動產實價登錄，共 44,979 筆預售屋交易資料</p>
+<nav class="navbar-custom">
+  <span class="navbar-brand">🏠 新北市預售屋實價登錄查詢系統</span>
+  <div class="tab-btns">
+    <button class="tab-btn active" onclick="switchTab('search',this)">🔍 搜尋篩選</button>
+    <button class="tab-btn" onclick="switchTab('charts',this)">📊 統計分析</button>
+    <button class="tab-btn" onclick="switchTab('calc',this)">🧮 價格計算</button>
+    <button class="tab-btn" onclick="switchTab('nearby',this)">📍 周邊機能</button>
+  </div>
+</nav>
+<div class="tab-panel active" id="tab-search">
+
+<div class="loading-overlay" id="loading">
+  <div class="spinner"></div>
+  <div class="loading-text">載入資料中，請稍候…</div>
 </div>
-<div class="nav">
-  <a href="#" onclick="show('search');return false" id="btn-search" class="active">🔍 搜尋篩選</a>
-  <a href="#" onclick="show('charts');return false" id="btn-charts">📊 統計分析</a>
-  <a href="#" onclick="show('calc');return false" id="btn-calc">🧮 價格計算</a>
-  <a href="#" onclick="show('nearby');return false" id="btn-nearby">📍 周邊機能</a>
+
+<!-- Stats -->
+<div class="stat-row" id="stat-row">
+  <div class="stat-pill"><div class="sv" id="s-total">-</div><div class="sl">篩選結果</div></div>
+  <div class="stat-pill"><div class="sv" id="s-avgup">-</div><div class="sl">平均單價(元/坪)</div></div>
+  <div class="stat-pill"><div class="sv" id="s-avgtp">-</div><div class="sl">平均總價(萬)</div></div>
 </div>
-<iframe id="f-search" src="widget-1-search.html"></iframe>
-<iframe id="f-charts" src="widget-2-charts.html" style="display:none"></iframe>
-<iframe id="f-calc" src="widget-3-calculator.html" style="display:none"></iframe>
-<iframe id="f-nearby" src="widget-4-nearby.html" style="display:none;min-height:900px"></iframe>
+
+<!-- Filters -->
+<div class="filter-card">
+  <div class="section-title">🔍 篩選條件</div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px;margin-bottom:10px">
+    <div><label>行政區</label><select class="form-select" id="f-district"><option value="">全部</option></select></div>
+    <div><label>建物型態</label><select class="form-select" id="f-buildtype"><option value="">全部</option></select></div>
+    <div><label>房間數</label>
+      <select class="form-select" id="f-room">
+        <option value="">不限</option><option value="1">1 房</option><option value="2">2 房</option>
+        <option value="3">3 房</option><option value="4">4+ 房</option>
+      </select>
+    </div>
+    <div><label>電梯</label>
+      <select class="form-select" id="f-elev">
+        <option value="">不限</option><option value="有">有電梯</option><option value="無">無電梯</option>
+      </select>
+    </div>
+    <div><label>總價最低(萬)</label><input type="number" class="form-control" id="f-pmin" placeholder="0"></div>
+    <div><label>總價最高(萬)</label><input type="number" class="form-control" id="f-pmax" placeholder="9999"></div>
+    <div><label>單價最低(元/坪)</label><input type="number" class="form-control" id="f-umin" placeholder="0"></div>
+    <div><label>單價最高(元/坪)</label><input type="number" class="form-control" id="f-umax" placeholder="999999"></div>
+    <div style="grid-column:span 2"><label>建案名稱關鍵字</label><input class="form-control" id="f-kw" placeholder="例：林口、天空之邑…"></div>
+  </div>
+  <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+    <button class="btn-search" onclick="applyFilters()">🔍 搜尋</button>
+    <button class="btn-reset" onclick="resetFilters()">↺ 重設</button>
+    <span class="result-info" id="result-info"></span>
+  </div>
+</div>
+
+<!-- Table -->
+<div class="table-card">
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th onclick="sortBy(0)">行政區</th>
+          <th onclick="sortBy(20)">建案名稱</th>
+          <th onclick="sortBy(8)">型態</th>
+          <th onclick="sortBy(10)">坪數</th>
+          <th>格局</th>
+          <th onclick="sortBy(6)">樓層</th>
+          <th onclick="sortBy(15)">總價(萬) ↕</th>
+          <th onclick="sortBy(16)">單價(元/坪) ↕</th>
+          <th>詳情</th>
+        </tr>
+      </thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+  <div class="footer-bar">
+    <div class="result-info">每頁
+      <select style="border:1px solid var(--border);border-radius:5px;padding:2px 4px;font-size:.8rem" id="pgsize" onchange="changePS(this.value)">
+        <option value="20">20</option><option value="50">50</option><option value="100">100</option>
+      </select> 筆
+    </div>
+    <ul class="pagination" id="pgul"></ul>
+  </div>
+</div>
+
+<!-- Detail Modal -->
+<div class="modal-overlay" id="modal" onclick="closeModal(event)">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h6 id="modal-title">詳細資料</h6>
+      <button class="modal-close" onclick="document.getElementById('modal').classList.remove('show')">✕</button>
+    </div>
+    <div class="modal-body" id="modal-body"></div>
+  </div>
+</div>
+
 <script>
-function show(tab){
-  ['search','charts','calc','nearby'].forEach(t=>{
-    document.getElementById('f-'+t).style.display = t===tab?'block':'none';
-    document.getElementById('btn-'+t).classList.toggle('active', t===tab);
+// !! REPLACE THIS URL WITH YOUR GITHUB RAW URL !!
+const SHARED_DATA_URL = './data.json';
+
+const C={district:0,type:1,address:2,land_area:3,land_use:4,date:5,floor:6,total_floors:7,build_type:8,use:9,build_area:10,room:11,hall:12,bath:13,elevator:14,total_price:15,unit_price:16,parking_type:17,parking_area:18,parking_price:19,project_name:20,unit_no:21};
+
+let ALL=[], filtered=[], sortCol=15, sortDir=-1, page=1, ps=20;
+
+async function loadData(){
+  try{
+    const r=await fetch(SHARED_DATA_URL);
+    ALL=await r.json();
+    filtered=ALL.slice();
+    document.getElementById('loading').style.display='none';
+    populateSelects();
+    applyFilters();
+  }catch(e){
+    document.getElementById('loading').innerHTML='<div style="color:red;padding:20px">⚠️ 資料載入失敗，請確認 GitHub URL 設定正確</div>';
+  }
+}
+
+function populateSelects(){
+  const ds=[...new Set(ALL.map(r=>r[C.district]))].filter(Boolean).sort();
+  const bs=[...new Set(ALL.map(r=>r[C.build_type]))].filter(Boolean).sort();
+  const dsel=document.getElementById('f-district');
+  ds.forEach(d=>{const o=document.createElement('option');o.value=o.textContent=d;dsel.appendChild(o);});
+  const bsel=document.getElementById('f-buildtype');
+  bs.forEach(b=>{const o=document.createElement('option');o.value=o.textContent=b;bsel.appendChild(o);});
+}
+
+function applyFilters(){
+  const d=document.getElementById('f-district').value;
+  const b=document.getElementById('f-buildtype').value;
+  const room=document.getElementById('f-room').value;
+  const elev=document.getElementById('f-elev').value;
+  const pmin=parseFloat(document.getElementById('f-pmin').value)||0;
+  const pmax=parseFloat(document.getElementById('f-pmax').value)||Infinity;
+  const umin=parseFloat(document.getElementById('f-umin').value)||0;
+  const umax=parseFloat(document.getElementById('f-umax').value)||Infinity;
+  const kw=document.getElementById('f-kw').value.trim().toLowerCase();
+  filtered=ALL.filter(r=>{
+    if(d&&r[C.district]!==d)return false;
+    if(b&&r[C.build_type]!==b)return false;
+    if(elev&&r[C.elevator]!==elev)return false;
+    if(room){const rv=parseInt(room);if(room==='4'){if(r[C.room]<4)return false;}else if(r[C.room]!==rv)return false;}
+    const tp=r[C.total_price]/10000;
+    if(tp<pmin||tp>pmax)return false;
+    if(r[C.unit_price]<umin||r[C.unit_price]>umax)return false;
+    if(kw){const s=((r[C.project_name]||'')+' '+(r[C.address]||'')+' '+(r[C.district]||'')).toLowerCase();if(!s.includes(kw))return false;}
+    return true;
+  });
+  sortBy(sortCol,true);page=1;updateStats();render();
+  document.getElementById('result-info').textContent='共 '+filtered.length.toLocaleString()+' 筆';
+}
+
+function resetFilters(){
+  ['f-district','f-buildtype','f-room','f-elev','f-pmin','f-pmax','f-umin','f-umax','f-kw'].forEach(id=>{
+    const el=document.getElementById(id);if(el.tagName==='SELECT')el.value='';else el.value='';
+  });
+  filtered=ALL.slice();sortCol=15;sortDir=-1;page=1;updateStats();render();
+  document.getElementById('result-info').textContent='';
+}
+
+function updateStats(){
+  const ups=filtered.filter(r=>r[C.unit_price]>0).map(r=>r[C.unit_price]);
+  const tps=filtered.filter(r=>r[C.total_price]>0).map(r=>r[C.total_price]/10000);
+  document.getElementById('s-total').textContent=filtered.length.toLocaleString();
+  document.getElementById('s-avgup').textContent=ups.length?Math.round(ups.reduce((a,b)=>a+b,0)/ups.length).toLocaleString():'-';
+  document.getElementById('s-avgtp').textContent=tps.length?Math.round(tps.reduce((a,b)=>a+b,0)/tps.length).toLocaleString():'-';
+}
+
+function sortBy(col,noFlip){
+  if(!noFlip){if(sortCol===col)sortDir*=-1;else{sortCol=col;sortDir=-1;}}
+  filtered.sort((a,b)=>{const av=a[col],bv=b[col];if(typeof av==='number')return(av-bv)*sortDir;return String(av||'').localeCompare(String(bv||''),'zh-TW')*sortDir;});
+  page=1;render();
+}
+
+function badge(bt){
+  if(!bt)return'';
+  if(bt.includes('住宅')||bt.includes('華廈'))return`<span class="badge-res">${bt}</span>`;
+  if(bt.includes('廠辦')||bt.includes('工廠'))return`<span class="badge-ind">${bt}</span>`;
+  if(bt.includes('辦公')||bt.includes('店面'))return`<span class="badge-com">${bt}</span>`;
+  return`<span class="badge-other">${bt}</span>`;
+}
+
+function render(){
+  const s=(page-1)*ps,e=s+ps,pg=filtered.slice(s,e);
+  document.getElementById('tbody').innerHTML=pg.map((r,i)=>{
+    const idx=s+i;
+    const tp=r[C.total_price]?(r[C.total_price]/10000).toFixed(0):'-';
+    const up=r[C.unit_price]?r[C.unit_price].toLocaleString():'-';
+    const layout=r[C.room]+'房'+r[C.hall]+'廳'+r[C.bath]+'衛';
+    return`<tr>
+      <td><span class="dist-badge">${r[C.district]}</span></td>
+      <td><b>${r[C.project_name]||'--'}</b><br><span style="font-size:.75rem;color:#888">${r[C.unit_no]||''}</span></td>
+      <td>${badge(r[C.build_type])}</td>
+      <td>${r[C.build_area]?r[C.build_area].toFixed(1)+'坪':'-'}</td>
+      <td style="white-space:nowrap">${layout}</td>
+      <td>${r[C.floor]||'--'}</td>
+      <td class="price-val">${tp}</td>
+      <td>${up}</td>
+      <td><button onclick="showDetail(${idx})" style="background:var(--primary);color:#fff;border:none;border-radius:5px;padding:2px 8px;font-size:.78rem;cursor:pointer">詳情</button></td>
+    </tr>`;
+  }).join('');
+  renderPg();
+}
+
+function renderPg(){
+  const total=Math.ceil(filtered.length/ps);
+  let h='';
+  h+=`<li class="${page>1?'':'disabled'}"><a onclick="goP(${page-1})">‹</a></li>`;
+  let s=Math.max(1,page-2),e=Math.min(total,s+4);if(e-s<4)s=Math.max(1,e-4);
+  for(let p=s;p<=e;p++)h+=`<li class="${p===page?'active':''}"><a onclick="goP(${p})">${p}</a></li>`;
+  h+=`<li class="${page<total?'':'disabled'}"><a onclick="goP(${page+1})">›</a></li>`;
+  document.getElementById('pgul').innerHTML=h;
+}
+
+function goP(p){const t=Math.ceil(filtered.length/ps);if(p<1||p>t)return;page=p;render();}
+function changePS(v){ps=parseInt(v);page=1;render();}
+
+function showDetail(idx){
+  const r=filtered[idx];
+  const dateStr=r[C.date]?r[C.date].replace(/^(\d{3})(\d{2})(\d{2})$/,'民國$1年$2月$3日'):'-';
+  const tp=r[C.total_price]?(r[C.total_price]/10000).toFixed(1)+' 萬元':'-';
+  const up=r[C.unit_price]?r[C.unit_price].toLocaleString()+' 元/坪':'-';
+  const pp=r[C.parking_price]?(r[C.parking_price]/10000).toFixed(1)+' 萬元':'無';
+  document.getElementById('modal-title').textContent=r[C.project_name]||r[C.address]||'詳細資料';
+  const rows=[
+    ['行政區',`<span class="dist-badge">${r[C.district]}</span>`],
+    ['建案名稱',`<b>${r[C.project_name]||'--'}</b>`],
+    ['棟戶號',r[C.unit_no]||'--'],
+    ['地址',r[C.address]||'--'],
+    ['交易標的',r[C.type]||'--'],
+    ['交易日期',dateStr],
+    ['建物型態',badge(r[C.build_type])],
+    ['用途',r[C.use]||'--'],
+    ['樓層/總樓層',`${r[C.floor]||'--'} / ${r[C.total_floors]||'--'}樓`],
+    ['建物面積',r[C.build_area]?r[C.build_area].toFixed(2)+' 坪':'-'],
+    ['土地面積',r[C.land_area]?r[C.land_area].toFixed(2)+' 坪':'-'],
+    ['格局',`${r[C.room]}房 ${r[C.hall]}廳 ${r[C.bath]}衛`],
+    ['電梯',r[C.elevator]||'--'],
+    ['總價',`<span class="highlight">${tp}</span>`],
+    ['單價',`<span class="highlight">${up}</span>`],
+    ['車位類型',r[C.parking_type]||'無'],
+    ['車位面積',r[C.parking_area]?r[C.parking_area].toFixed(2)+' 坪':'-'],
+    ['車位價格',pp],
+  ];
+  document.getElementById('modal-body').innerHTML=rows.map(([l,v])=>`<div class="detail-row"><div class="detail-label">${l}</div><div class="detail-val">${v}</div></div>`).join('');
+  document.getElementById('modal').classList.add('show');
+}
+
+function closeModal(e){if(e.target===document.getElementById('modal'))document.getElementById('modal').classList.remove('show');}
+
+loadData();
+</script>
+</div>
+<div class="tab-panel" id="tab-charts">
+
+<div class="loading-overlay" id="loading">
+  <div class="spinner"></div>
+  <div class="loading-text">載入資料中，請稍候…</div>
+</div>
+
+<!-- Summary stats -->
+<div class="stat-bar">
+  <div class="stat-pill"><div class="sv" id="s-total">-</div><div class="sl">總筆數</div></div>
+  <div class="stat-pill"><div class="sv" id="s-avgup">-</div><div class="sl">全區平均單價(元/坪)</div></div>
+  <div class="stat-pill"><div class="sv" id="s-topd">-</div><div class="sl">最高均價行政區</div></div>
+  <div class="stat-pill"><div class="sv" id="s-most">-</div><div class="sl">成交量最大區</div></div>
+</div>
+
+<!-- Chart 1: district avg unit price -->
+<div class="card">
+  <div class="chart-title"><i class="bi bi-bar-chart-fill"></i>各行政區平均單價（元/坪）</div>
+  <canvas id="c1" height="200"></canvas>
+</div>
+
+<div class="grid2">
+  <!-- Chart 2: count pie -->
+  <div class="card">
+    <div class="chart-title"><i class="bi bi-pie-chart-fill"></i>各區成交量佔比</div>
+    <canvas id="c2" height="240"></canvas>
+  </div>
+  <!-- Chart 3: build type -->
+  <div class="card">
+    <div class="chart-title"><i class="bi bi-buildings-fill"></i>建物型態分布</div>
+    <canvas id="c3" height="240"></canvas>
+  </div>
+</div>
+
+<!-- Chart 4: price distribution -->
+<div class="card">
+  <div class="chart-title"><i class="bi bi-distribute-horizontal"></i>總價分布區間（萬元）</div>
+  <canvas id="c4" height="160"></canvas>
+</div>
+
+<!-- Chart 5: room layout -->
+<div class="card">
+  <div class="chart-title"><i class="bi bi-grid-3x3"></i>格局分布（房數）</div>
+  <div class="dist-filter" id="dist-filter"></div>
+  <canvas id="c5" height="140"></canvas>
+</div>
+
+<script>
+// !! REPLACE THIS URL WITH YOUR GITHUB RAW URL !!
+// DATA_URL_2 = shared;
+
+const C={district:0,type:1,address:2,land_area:3,land_use:4,date:5,floor:6,total_floors:7,build_type:8,use:9,build_area:10,room:11,hall:12,bath:13,elevator:14,total_price:15,unit_price:16,parking_type:17,parking_area:18,parking_price:19,project_name:20,unit_no:21};
+const PALETTE=['#1a3a5c','#e8732a','#2a9d8f','#f4a261','#457b9d','#e63946','#06d6a0','#ffd166','#118ab2','#ef476f','#264653','#a8dadc','#e9c46a','#073b4c','#2a9d8f','#c77dff','#48cae4','#90be6d','#f3722c','#277da1'];
+let ALL=[], charts={}, selectedDist='';
+
+async function loadData(){
+  try{
+    const r=await fetch(SHARED_DATA_URL);
+    ALL=await r.json();
+    document.getElementById('loading').style.display='none';
+    renderAll();
+  }catch(e){
+    document.getElementById('loading').innerHTML='<div style="color:red;padding:20px">⚠️ 資料載入失敗，請確認 GitHub URL 設定正確</div>';
+  }
+}
+
+function renderAll(){
+  renderStats();
+  renderC1();
+  renderC2();
+  renderC3();
+  renderC4();
+  buildDistFilter();
+  renderC5('');
+}
+
+function renderStats(){
+  const ups=ALL.filter(r=>r[C.unit_price]>0).map(r=>r[C.unit_price]);
+  const avgUp=Math.round(ups.reduce((a,b)=>a+b,0)/ups.length);
+  // dist stats
+  const ds={};
+  ALL.forEach(r=>{
+    if(!ds[r[C.district]])ds[r[C.district]]={count:0,up_sum:0,up_n:0};
+    ds[r[C.district]].count++;
+    if(r[C.unit_price]>0){ds[r[C.district]].up_sum+=r[C.unit_price];ds[r[C.district]].up_n++;}
+  });
+  const sorted=Object.entries(ds).map(([d,s])=>({d,avg:s.up_n?Math.round(s.up_sum/s.up_n):0,count:s.count})).sort((a,b)=>b.avg-a.avg);
+  const topCount=Object.entries(ds).sort((a,b)=>b[1].count-a[1].count)[0];
+  document.getElementById('s-total').textContent=ALL.length.toLocaleString();
+  document.getElementById('s-avgup').textContent=avgUp.toLocaleString();
+  document.getElementById('s-topd').textContent=sorted[0].d;
+  document.getElementById('s-most').textContent=topCount[0];
+}
+
+function getDistStats(){
+  const ds={};
+  ALL.forEach(r=>{
+    const d=r[C.district];
+    if(!ds[d])ds[d]={count:0,up_sum:0,up_n:0};
+    ds[d].count++;
+    if(r[C.unit_price]>0){ds[d].up_sum+=r[C.unit_price];ds[d].up_n++;}
+  });
+  return Object.entries(ds).map(([d,s])=>({d,avg:s.up_n?Math.round(s.up_sum/s.up_n):0,count:s.count})).filter(x=>x.avg>0).sort((a,b)=>b.avg-a.avg);
+}
+
+function renderC1(){
+  const stats=getDistStats();
+  const ctx=document.getElementById('c1');
+  if(charts.c1)charts.c1.destroy();
+  charts.c1=new Chart(ctx,{
+    type:'bar',
+    data:{labels:stats.map(s=>s.d),datasets:[{label:'均價(元/坪)',data:stats.map(s=>s.avg),backgroundColor:stats.map((_,i)=>PALETTE[i%PALETTE.length]),borderRadius:6}]},
+    options:{responsive:true,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>c.parsed.y.toLocaleString()+' 元/坪'}}},scales:{y:{ticks:{callback:v=>v.toLocaleString()},grid:{color:'#f0f0f0'}},x:{ticks:{font:{size:11}}}}}
   });
 }
-// Auto-resize iframes
-document.querySelectorAll('iframe').forEach(f=>{
-  f.onload=()=>{
-    try{f.style.height=f.contentWindow.document.body.scrollHeight+'px';}catch(e){}
-  };
-});
+
+function renderC2(){
+  const stats=getDistStats().sort((a,b)=>b.count-a.count);
+  const ctx=document.getElementById('c2');
+  if(charts.c2)charts.c2.destroy();
+  charts.c2=new Chart(ctx,{
+    type:'doughnut',
+    data:{labels:stats.map(s=>s.d),datasets:[{data:stats.map(s=>s.count),backgroundColor:PALETTE}]},
+    options:{responsive:true,plugins:{legend:{position:'right',labels:{font:{size:10},boxWidth:10}}}}
+  });
+}
+
+function renderC3(){
+  const bt={};
+  ALL.forEach(r=>{const b=r[C.build_type]||'其他';bt[b]=(bt[b]||0)+1;});
+  const sorted=Object.entries(bt).sort((a,b)=>b[1]-a[1]);
+  const ctx=document.getElementById('c3');
+  if(charts.c3)charts.c3.destroy();
+  charts.c3=new Chart(ctx,{
+    type:'bar',
+    data:{labels:sorted.map(b=>b[0]),datasets:[{label:'筆數',data:sorted.map(b=>b[1]),backgroundColor:'#2a9d8f',borderRadius:6}]},
+    options:{indexAxis:'y',responsive:true,plugins:{legend:{display:false}},scales:{x:{grid:{color:'#f0f0f0'}}}}
+  });
+}
+
+function renderC4(){
+  const bands=[[0,500],[500,1000],[1000,1500],[1500,2000],[2000,3000],[3000,5000],[5000,99999]];
+  const labels=['500萬以下','500-1000萬','1000-1500萬','1500-2000萬','2000-3000萬','3000-5000萬','5000萬以上'];
+  const counts=bands.map(([lo,hi])=>ALL.filter(r=>{const tp=r[C.total_price]/10000;return tp>=lo&&tp<hi;}).length);
+  const ctx=document.getElementById('c4');
+  if(charts.c4)charts.c4.destroy();
+  charts.c4=new Chart(ctx,{
+    type:'bar',
+    data:{labels,datasets:[{label:'筆數',data:counts,backgroundColor:'#e8732a',borderRadius:6}]},
+    options:{responsive:true,plugins:{legend:{display:false}},scales:{y:{grid:{color:'#f0f0f0'}},x:{ticks:{font:{size:10}}}}}
+  });
+}
+
+function buildDistFilter(){
+  const dists=[''].concat([...new Set(ALL.map(r=>r[C.district]))].filter(Boolean).sort());
+  const wrap=document.getElementById('dist-filter');
+  wrap.innerHTML=dists.map(d=>`<button class="dist-btn${d===''?' active':''}" onclick="selectDist('${d}',this)">${d||'全部'}</button>`).join('');
+}
+
+function selectDist(d,btn){
+  selectedDist=d;
+  document.querySelectorAll('.dist-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderC5(d);
+}
+
+function renderC5(dist){
+  const data=dist?ALL.filter(r=>r[C.district]===dist):ALL;
+  const rm={};
+  data.forEach(r=>{const v=r[C.room];if(v>=0&&v<=6)rm[v]=(rm[v]||0)+1;});
+  const labels=['0房','1房','2房','3房','4房','5房','6房以上'];
+  const counts=[0,1,2,3,4,5,6].map(v=>rm[v]||0);
+  const ctx=document.getElementById('c5');
+  if(charts.c5)charts.c5.destroy();
+  charts.c5=new Chart(ctx,{
+    type:'bar',
+    data:{labels,datasets:[{label:'筆數',data:counts,backgroundColor:['#adb5bd','#457b9d','#2a9d8f','#e8732a','#e63946','#f4a261','#264653'],borderRadius:6}]},
+    options:{responsive:true,plugins:{legend:{display:false}},scales:{y:{grid:{color:'#f0f0f0'}}}}
+  });
+}
+
+loadData();
+</script>
+</div>
+<div class="tab-panel" id="tab-calc">
+
+<div class="loading-overlay" id="loading">
+  <div class="spinner"></div>
+  <div class="loading-text">載入均價資料中…</div>
+</div>
+
+<div class="tab-bar">
+  <button class="tab-btn active" onclick="switchTab('a',this)">📐 由單價算總價</button>
+  <button class="tab-btn" onclick="switchTab('b',this)">💰 由總價反推單價</button>
+  <button class="tab-btn" onclick="switchTab('c',this)">📊 均價參考表</button>
+</div>
+
+<!-- Tab A: unit price → total -->
+<div class="tab-panel active" id="tab-a">
+  <div class="card">
+    <div class="section-title">由單價推算總價與貸款</div>
+    <div class="grid2">
+      <div>
+        <label>行政區參考 <span class="tag">自動帶入均價</span></label>
+        <select class="form-ctrl" id="a-dist" onchange="aDistChange()"><option value="">-- 選擇行政區（選填）--</option></select>
+        <div class="hint" id="a-dist-hint"></div>
+      </div>
+      <div>
+        <label>建物坪數（坪）</label>
+        <input class="form-ctrl" type="number" id="a-area" placeholder="例：30" min="1" oninput="calcA()">
+      </div>
+      <div>
+        <label>單價（元/坪）</label>
+        <input class="form-ctrl" type="number" id="a-up" placeholder="例：200000" oninput="calcA()">
+      </div>
+      <div>
+        <label>車位價格（萬元，無則填 0）</label>
+        <input class="form-ctrl" type="number" id="a-pk" value="0" min="0" oninput="calcA()">
+      </div>
+      <div>
+        <label>頭期款比例</label>
+        <div class="range-wrap">
+          <input type="range" id="a-down" min="10" max="50" value="20" oninput="document.getElementById('a-down-v').textContent=this.value+'%';calcA()">
+          <span class="range-val" id="a-down-v">20%</span>
+        </div>
+      </div>
+      <div>
+        <label>貸款年期</label>
+        <select class="form-ctrl" id="a-years" onchange="calcA()">
+          <option value="20">20 年</option>
+          <option value="30" selected>30 年</option>
+          <option value="40">40 年</option>
+        </select>
+      </div>
+    </div>
+    <div class="result-box" id="a-result">
+      <div class="result-row">
+        <div class="result-col"><div class="rl">房屋本體</div><div class="rv" id="a-r-house">--</div></div>
+        <div class="result-col"><div class="rl">含車位總價</div><div class="rv accent" id="a-r-total">--</div></div>
+      </div>
+      <div class="result-row" style="margin-top:10px">
+        <div class="result-col"><div class="rl">頭期款</div><div class="rv" id="a-r-down">--</div></div>
+        <div class="result-col"><div class="rl">貸款金額</div><div class="rv" id="a-r-loan">--</div></div>
+      </div>
+      <div class="monthly-note">每月房貸（2.5% 利率）：<b id="a-r-monthly">--</b></div>
+    </div>
+  </div>
+</div>
+
+<!-- Tab B: total → unit price -->
+<div class="tab-panel" id="tab-b">
+  <div class="card">
+    <div class="section-title">由總價反推單價與還款計畫</div>
+    <div class="grid2">
+      <div>
+        <label>成交總價（萬元）</label>
+        <input class="form-ctrl" type="number" id="b-tp" placeholder="例：1500" oninput="calcB()">
+      </div>
+      <div>
+        <label>建物坪數（坪）</label>
+        <input class="form-ctrl" type="number" id="b-area" placeholder="例：35" min="1" oninput="calcB()">
+      </div>
+      <div>
+        <label>車位價格（萬元，無則填 0）</label>
+        <input class="form-ctrl" type="number" id="b-pk" value="0" min="0" oninput="calcB()">
+      </div>
+      <div>
+        <label>年收入（萬元，用於負擔率試算）</label>
+        <input class="form-ctrl" type="number" id="b-income" placeholder="例：120" oninput="calcB()">
+      </div>
+      <div>
+        <label>頭期款比例</label>
+        <div class="range-wrap">
+          <input type="range" id="b-down" min="10" max="50" value="20" oninput="document.getElementById('b-down-v').textContent=this.value+'%';calcB()">
+          <span class="range-val" id="b-down-v">20%</span>
+        </div>
+      </div>
+      <div>
+        <label>貸款年期</label>
+        <select class="form-ctrl" id="b-years" onchange="calcB()">
+          <option value="20">20 年</option>
+          <option value="30" selected>30 年</option>
+          <option value="40">40 年</option>
+        </select>
+      </div>
+    </div>
+    <div class="result-box">
+      <div class="result-row">
+        <div class="result-col"><div class="rl">推算單價</div><div class="rv accent" id="b-r-up">--</div></div>
+        <div class="result-col"><div class="rl">頭期款</div><div class="rv" id="b-r-down">--</div></div>
+      </div>
+      <div class="result-row" style="margin-top:10px">
+        <div class="result-col"><div class="rl">貸款金額</div><div class="rv" id="b-r-loan">--</div></div>
+        <div class="result-col"><div class="rl">每月房貸（2.5%）</div><div class="rv accent" id="b-r-monthly">--</div></div>
+      </div>
+      <div class="monthly-note" id="b-burden-note">輸入年收入可試算房貸負擔率</div>
+    </div>
+  </div>
+</div>
+
+<!-- Tab C: reference table -->
+<div class="tab-panel" id="tab-c">
+  <div class="card">
+    <div class="section-title">各行政區均價參考表</div>
+    <div class="ref-table-wrap">
+      <table class="ref-table">
+        <thead>
+          <tr><th>行政區</th><th>筆數</th><th>平均單價(元/坪)</th><th>最低單價</th><th>最高單價</th><th>平均總價(萬)</th></tr>
+        </thead>
+        <tbody id="ref-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script>
+// !! REPLACE THIS URL WITH YOUR GITHUB RAW URL !!
+// DATA_URL_3 = shared;
+
+const C={district:0,unit_price:16,total_price:15,build_area:10,room:11,parking_price:19};
+let distStats={};
+
+async function loadData(){
+  try{
+    const r=await fetch(SHARED_DATA_URL);
+    const data=await r.json();
+    // compute district stats only
+    data.forEach(row=>{
+      const d=row[C.district];if(!d)return;
+      if(!distStats[d])distStats[d]={n:0,up_sum:0,up_n:0,tp_sum:0,up_min:Infinity,up_max:0};
+      const s=distStats[d];s.n++;
+      if(row[C.unit_price]>0){s.up_sum+=row[C.unit_price];s.up_n++;s.up_min=Math.min(s.up_min,row[C.unit_price]);s.up_max=Math.max(s.up_max,row[C.unit_price]);}
+      if(row[C.total_price]>0)s.tp_sum+=row[C.total_price];
+    });
+    Object.values(distStats).forEach(s=>{s.avg_up=s.up_n?Math.round(s.up_sum/s.up_n):0;s.avg_tp=s.n?Math.round(s.tp_sum/s.n/10000):0;if(s.up_min===Infinity)s.up_min=0;});
+    document.getElementById('loading').style.display='none';
+    populateDistSelect();
+    renderRefTable();
+  }catch(e){
+    document.getElementById('loading').innerHTML='<div style="color:red;padding:20px">⚠️ 資料載入失敗，請確認 GitHub URL 設定正確</div>';
+  }
+}
+
+function populateDistSelect(){
+  const sel=document.getElementById('a-dist');
+  Object.keys(distStats).sort().forEach(d=>{const o=document.createElement('option');o.value=o.textContent=d;sel.appendChild(o);});
+}
+
+function renderRefTable(){
+  const rows=Object.entries(distStats).sort((a,b)=>b[1].avg_up-a[1].avg_up);
+  const maxAvg=rows[0][1].avg_up;
+  document.getElementById('ref-tbody').innerHTML=rows.map(([d,s])=>`<tr>
+    <td><span class="dist-badge">${d}</span>${s.avg_up===maxAvg?'<span class="tag hot">最高</span>':''}</td>
+    <td>${s.n.toLocaleString()}</td>
+    <td class="top-dist">${s.avg_up.toLocaleString()}</td>
+    <td>${s.up_min.toLocaleString()}</td>
+    <td>${s.up_max.toLocaleString()}</td>
+    <td>${s.avg_tp.toLocaleString()}</td>
+  </tr>`).join('');
+}
+
+function aDistChange(){
+  const d=document.getElementById('a-dist').value;
+  const hint=document.getElementById('a-dist-hint');
+  if(d&&distStats[d]){
+    const s=distStats[d];
+    hint.textContent=`${d} 均價：${s.avg_up.toLocaleString()} 元/坪（最低 ${s.up_min.toLocaleString()}，最高 ${s.up_max.toLocaleString()}）`;
+    document.getElementById('a-up').value=s.avg_up;
+  }else hint.textContent='';
+  calcA();
+}
+
+function monthly(loanWan,rate=0.025,years=30){
+  const loan=loanWan*10000,r=rate/12,n=years*12;
+  return Math.round(loan*r*Math.pow(1+r,n)/(Math.pow(1+r,n)-1));
+}
+
+function calcA(){
+  const area=parseFloat(document.getElementById('a-area').value)||0;
+  const up=parseFloat(document.getElementById('a-up').value)||0;
+  const pk=parseFloat(document.getElementById('a-pk').value)||0;
+  const downPct=parseInt(document.getElementById('a-down').value)||20;
+  const years=parseInt(document.getElementById('a-years').value)||30;
+  if(!area||!up)return;
+  const houseWan=area*up/10000;
+  const totalWan=houseWan+pk;
+  const downWan=totalWan*downPct/100;
+  const loanWan=totalWan-downWan;
+  const mo=monthly(loanWan,0.025,years);
+  document.getElementById('a-r-house').textContent=houseWan.toFixed(1)+' 萬';
+  document.getElementById('a-r-total').textContent=totalWan.toFixed(1)+' 萬';
+  document.getElementById('a-r-down').textContent=downWan.toFixed(1)+' 萬';
+  document.getElementById('a-r-loan').textContent=loanWan.toFixed(1)+' 萬';
+  document.getElementById('a-r-monthly').textContent='約 '+mo.toLocaleString()+' 元';
+}
+
+function calcB(){
+  const tp=parseFloat(document.getElementById('b-tp').value)||0;
+  const area=parseFloat(document.getElementById('b-area').value)||0;
+  const pk=parseFloat(document.getElementById('b-pk').value)||0;
+  const income=parseFloat(document.getElementById('b-income').value)||0;
+  const downPct=parseInt(document.getElementById('b-down').value)||20;
+  const years=parseInt(document.getElementById('b-years').value)||30;
+  if(!tp||!area)return;
+  const houseWan=tp-pk;
+  const up=Math.round(houseWan*10000/area);
+  const downWan=tp*downPct/100;
+  const loanWan=tp-downWan;
+  const mo=monthly(loanWan,0.025,years);
+  document.getElementById('b-r-up').textContent=up.toLocaleString()+' 元/坪';
+  document.getElementById('b-r-down').textContent=downWan.toFixed(1)+' 萬';
+  document.getElementById('b-r-loan').textContent=loanWan.toFixed(1)+' 萬';
+  document.getElementById('b-r-monthly').textContent='約 '+mo.toLocaleString()+' 元';
+  if(income>0){
+    const moIncome=income*10000/12;
+    const burdenPct=Math.round(mo/moIncome*100);
+    const level=burdenPct<=30?'✅ 健康（≤30%）':burdenPct<=40?'⚠️ 偏高（30~40%）':'🔴 過高（>40%）';
+    document.getElementById('b-burden-note').textContent=`房貸負擔率：${burdenPct}%  ${level}`;
+  }else{
+    document.getElementById('b-burden-note').textContent='輸入年收入可試算房貸負擔率';
+  }
+}
+
+function switchTab(id,btn){
+  document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('tab-'+id).classList.add('active');
+  btn.classList.add('active');
+}
+
+loadData();
+</script>
+</div>
+<div class="tab-panel" id="tab-nearby">
+<div class="nb-wrap">
+  <div class="nb-search-bar">
+    <div class="nb-search-inner">
+      <div class="nb-search-icon">📍</div>
+      <input class="nb-input" id="nb-addr" placeholder="輸入地址，例：新北市板橋區文化路、林口區文化一路…" onkeydown="if(event.key==='Enter')nbSearch()">
+      <select class="nb-radius" id="nb-radius">
+        <option value="500">500m</option>
+        <option value="1000" selected>1km</option>
+        <option value="1500">1.5km</option>
+        <option value="2000">2km</option>
+      </select>
+      <button class="nb-btn-locate" onclick="nbSearch()" id="nb-btn-loc">
+        <span id="nb-btn-txt">🔍 定位搜尋</span>
+      </button>
+    </div>
+    <div class="nb-progress" id="nb-progress"><div class="nb-progress-bar" id="nb-pbar"></div></div>
+  </div>
+
+  <div class="nb-facility-bar" id="nb-facility-bar" style="display:none">
+    <div class="nb-facility-title">選擇設施類型（可複選）</div>
+    <div class="nb-facility-row">
+      <div class="nb-fac active" data-type="hospital" onclick="nbToggleFac(this)">
+        <div class="nb-fac-icon" style="background:#ffebee">🏥</div>
+        <div class="nb-fac-label">醫院診所</div>
+        <div class="nb-fac-count" id="fc-hospital"></div>
+      </div>
+      <div class="nb-fac active" data-type="school" onclick="nbToggleFac(this)">
+        <div class="nb-fac-icon" style="background:#e3f2fd">🎓</div>
+        <div class="nb-fac-label">學校</div>
+        <div class="nb-fac-count" id="fc-school"></div>
+      </div>
+      <div class="nb-fac active" data-type="supermarket" onclick="nbToggleFac(this)">
+        <div class="nb-fac-icon" style="background:#e8f5e9">🛒</div>
+        <div class="nb-fac-label">超市賣場</div>
+        <div class="nb-fac-count" id="fc-supermarket"></div>
+      </div>
+      <div class="nb-fac active" data-type="subway" onclick="nbToggleFac(this)">
+        <div class="nb-fac-icon" style="background:#ede7f6">🚇</div>
+        <div class="nb-fac-label">捷運站</div>
+        <div class="nb-fac-count" id="fc-subway"></div>
+      </div>
+      <div class="nb-fac active" data-type="park" onclick="nbToggleFac(this)">
+        <div class="nb-fac-icon" style="background:#e8f5e9">🌳</div>
+        <div class="nb-fac-label">公園綠地</div>
+        <div class="nb-fac-count" id="fc-park"></div>
+      </div>
+      <div class="nb-fac active" data-type="bank" onclick="nbToggleFac(this)">
+        <div class="nb-fac-icon" style="background:#fff3e0">🏦</div>
+        <div class="nb-fac-label">銀行</div>
+        <div class="nb-fac-count" id="fc-bank"></div>
+      </div>
+    </div>
+    <button class="nb-btn-query" onclick="nbQueryNearby()" id="nb-btn-query">🔎 查詢周邊設施</button>
+  </div>
+
+  <div class="nb-main" id="nb-main" style="display:none">
+    <div class="nb-map-wrap"><div id="nb-map"></div></div>
+    <div class="nb-sidebar">
+      <div class="nb-sidebar-header">
+        <span>周邊設施清單</span>
+        <span class="nb-total-badge" id="nb-total-badge">0 筆</span>
+      </div>
+      <div class="nb-cat-tabs" id="nb-cat-tabs"></div>
+      <div class="nb-list" id="nb-list"><div class="nb-empty">🗺️ 查詢後顯示結果</div></div>
+    </div>
+  </div>
+</div>
+</div>
+<script>
+function switchTab(tab,btn){
+  document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('tab-'+tab).classList.add('active');
+  btn.classList.add('active');
+  if(tab==='charts')renderCharts();
+  if(tab==='nearby'&&typeof nbMap!=='undefined'&&nbMap)setTimeout(()=>nbMap.invalidateSize(),150);
+}
+
+// !! REPLACE THIS URL WITH YOUR GITHUB RAW URL !!
+const SHARED_DATA_URL = './data.json';
+
+const C={district:0,type:1,address:2,land_area:3,land_use:4,date:5,floor:6,total_floors:7,build_type:8,use:9,build_area:10,room:11,hall:12,bath:13,elevator:14,total_price:15,unit_price:16,parking_type:17,parking_area:18,parking_price:19,project_name:20,unit_no:21};
+
+let ALL=[], filtered=[], sortCol=15, sortDir=-1, page=1, ps=20;
+
+async function loadData(){
+  try{
+    const r=await fetch(SHARED_DATA_URL);
+    ALL=await r.json();
+    filtered=ALL.slice();
+    document.getElementById('loading').style.display='none';
+    populateSelects();
+    applyFilters();
+  }catch(e){
+    document.getElementById('loading').innerHTML='<div style="color:red;padding:20px">⚠️ 資料載入失敗，請確認 GitHub URL 設定正確</div>';
+  }
+}
+
+function populateSelects(){
+  const ds=[...new Set(ALL.map(r=>r[C.district]))].filter(Boolean).sort();
+  const bs=[...new Set(ALL.map(r=>r[C.build_type]))].filter(Boolean).sort();
+  const dsel=document.getElementById('f-district');
+  ds.forEach(d=>{const o=document.createElement('option');o.value=o.textContent=d;dsel.appendChild(o);});
+  const bsel=document.getElementById('f-buildtype');
+  bs.forEach(b=>{const o=document.createElement('option');o.value=o.textContent=b;bsel.appendChild(o);});
+}
+
+function applyFilters(){
+  const d=document.getElementById('f-district').value;
+  const b=document.getElementById('f-buildtype').value;
+  const room=document.getElementById('f-room').value;
+  const elev=document.getElementById('f-elev').value;
+  const pmin=parseFloat(document.getElementById('f-pmin').value)||0;
+  const pmax=parseFloat(document.getElementById('f-pmax').value)||Infinity;
+  const umin=parseFloat(document.getElementById('f-umin').value)||0;
+  const umax=parseFloat(document.getElementById('f-umax').value)||Infinity;
+  const kw=document.getElementById('f-kw').value.trim().toLowerCase();
+  filtered=ALL.filter(r=>{
+    if(d&&r[C.district]!==d)return false;
+    if(b&&r[C.build_type]!==b)return false;
+    if(elev&&r[C.elevator]!==elev)return false;
+    if(room){const rv=parseInt(room);if(room==='4'){if(r[C.room]<4)return false;}else if(r[C.room]!==rv)return false;}
+    const tp=r[C.total_price]/10000;
+    if(tp<pmin||tp>pmax)return false;
+    if(r[C.unit_price]<umin||r[C.unit_price]>umax)return false;
+    if(kw){const s=((r[C.project_name]||'')+' '+(r[C.address]||'')+' '+(r[C.district]||'')).toLowerCase();if(!s.includes(kw))return false;}
+    return true;
+  });
+  sortBy(sortCol,true);page=1;updateStats();render();
+  document.getElementById('result-info').textContent='共 '+filtered.length.toLocaleString()+' 筆';
+}
+
+function resetFilters(){
+  ['f-district','f-buildtype','f-room','f-elev','f-pmin','f-pmax','f-umin','f-umax','f-kw'].forEach(id=>{
+    const el=document.getElementById(id);if(el.tagName==='SELECT')el.value='';else el.value='';
+  });
+  filtered=ALL.slice();sortCol=15;sortDir=-1;page=1;updateStats();render();
+  document.getElementById('result-info').textContent='';
+}
+
+function updateStats(){
+  const ups=filtered.filter(r=>r[C.unit_price]>0).map(r=>r[C.unit_price]);
+  const tps=filtered.filter(r=>r[C.total_price]>0).map(r=>r[C.total_price]/10000);
+  document.getElementById('s-total').textContent=filtered.length.toLocaleString();
+  document.getElementById('s-avgup').textContent=ups.length?Math.round(ups.reduce((a,b)=>a+b,0)/ups.length).toLocaleString():'-';
+  document.getElementById('s-avgtp').textContent=tps.length?Math.round(tps.reduce((a,b)=>a+b,0)/tps.length).toLocaleString():'-';
+}
+
+function sortBy(col,noFlip){
+  if(!noFlip){if(sortCol===col)sortDir*=-1;else{sortCol=col;sortDir=-1;}}
+  filtered.sort((a,b)=>{const av=a[col],bv=b[col];if(typeof av==='number')return(av-bv)*sortDir;return String(av||'').localeCompare(String(bv||''),'zh-TW')*sortDir;});
+  page=1;render();
+}
+
+function badge(bt){
+  if(!bt)return'';
+  if(bt.includes('住宅')||bt.includes('華廈'))return`<span class="badge-res">${bt}</span>`;
+  if(bt.includes('廠辦')||bt.includes('工廠'))return`<span class="badge-ind">${bt}</span>`;
+  if(bt.includes('辦公')||bt.includes('店面'))return`<span class="badge-com">${bt}</span>`;
+  return`<span class="badge-other">${bt}</span>`;
+}
+
+function render(){
+  const s=(page-1)*ps,e=s+ps,pg=filtered.slice(s,e);
+  document.getElementById('tbody').innerHTML=pg.map((r,i)=>{
+    const idx=s+i;
+    const tp=r[C.total_price]?(r[C.total_price]/10000).toFixed(0):'-';
+    const up=r[C.unit_price]?r[C.unit_price].toLocaleString():'-';
+    const layout=r[C.room]+'房'+r[C.hall]+'廳'+r[C.bath]+'衛';
+    return`<tr>
+      <td><span class="dist-badge">${r[C.district]}</span></td>
+      <td><b>${r[C.project_name]||'--'}</b><br><span style="font-size:.75rem;color:#888">${r[C.unit_no]||''}</span></td>
+      <td>${badge(r[C.build_type])}</td>
+      <td>${r[C.build_area]?r[C.build_area].toFixed(1)+'坪':'-'}</td>
+      <td style="white-space:nowrap">${layout}</td>
+      <td>${r[C.floor]||'--'}</td>
+      <td class="price-val">${tp}</td>
+      <td>${up}</td>
+      <td><button onclick="showDetail(${idx})" style="background:var(--primary);color:#fff;border:none;border-radius:5px;padding:2px 8px;font-size:.78rem;cursor:pointer">詳情</button></td>
+    </tr>`;
+  }).join('');
+  renderPg();
+}
+
+function renderPg(){
+  const total=Math.ceil(filtered.length/ps);
+  let h='';
+  h+=`<li class="${page>1?'':'disabled'}"><a onclick="goP(${page-1})">‹</a></li>`;
+  let s=Math.max(1,page-2),e=Math.min(total,s+4);if(e-s<4)s=Math.max(1,e-4);
+  for(let p=s;p<=e;p++)h+=`<li class="${p===page?'active':''}"><a onclick="goP(${p})">${p}</a></li>`;
+  h+=`<li class="${page<total?'':'disabled'}"><a onclick="goP(${page+1})">›</a></li>`;
+  document.getElementById('pgul').innerHTML=h;
+}
+
+function goP(p){const t=Math.ceil(filtered.length/ps);if(p<1||p>t)return;page=p;render();}
+function changePS(v){ps=parseInt(v);page=1;render();}
+
+function showDetail(idx){
+  const r=filtered[idx];
+  const dateStr=r[C.date]?r[C.date].replace(/^(\d{3})(\d{2})(\d{2})$/,'民國$1年$2月$3日'):'-';
+  const tp=r[C.total_price]?(r[C.total_price]/10000).toFixed(1)+' 萬元':'-';
+  const up=r[C.unit_price]?r[C.unit_price].toLocaleString()+' 元/坪':'-';
+  const pp=r[C.parking_price]?(r[C.parking_price]/10000).toFixed(1)+' 萬元':'無';
+  document.getElementById('modal-title').textContent=r[C.project_name]||r[C.address]||'詳細資料';
+  const rows=[
+    ['行政區',`<span class="dist-badge">${r[C.district]}</span>`],
+    ['建案名稱',`<b>${r[C.project_name]||'--'}</b>`],
+    ['棟戶號',r[C.unit_no]||'--'],
+    ['地址',r[C.address]||'--'],
+    ['交易標的',r[C.type]||'--'],
+    ['交易日期',dateStr],
+    ['建物型態',badge(r[C.build_type])],
+    ['用途',r[C.use]||'--'],
+    ['樓層/總樓層',`${r[C.floor]||'--'} / ${r[C.total_floors]||'--'}樓`],
+    ['建物面積',r[C.build_area]?r[C.build_area].toFixed(2)+' 坪':'-'],
+    ['土地面積',r[C.land_area]?r[C.land_area].toFixed(2)+' 坪':'-'],
+    ['格局',`${r[C.room]}房 ${r[C.hall]}廳 ${r[C.bath]}衛`],
+    ['電梯',r[C.elevator]||'--'],
+    ['總價',`<span class="highlight">${tp}</span>`],
+    ['單價',`<span class="highlight">${up}</span>`],
+    ['車位類型',r[C.parking_type]||'無'],
+    ['車位面積',r[C.parking_area]?r[C.parking_area].toFixed(2)+' 坪':'-'],
+    ['車位價格',pp],
+  ];
+  document.getElementById('modal-body').innerHTML=rows.map(([l,v])=>`<div class="detail-row"><div class="detail-label">${l}</div><div class="detail-val">${v}</div></div>`).join('');
+  document.getElementById('modal').classList.add('show');
+}
+
+function closeModal(e){if(e.target===document.getElementById('modal'))document.getElementById('modal').classList.remove('show');}
+
+loadData();
+
+
+// !! REPLACE THIS URL WITH YOUR GITHUB RAW URL !!
+// DATA_URL_2 = shared;
+
+const C={district:0,type:1,address:2,land_area:3,land_use:4,date:5,floor:6,total_floors:7,build_type:8,use:9,build_area:10,room:11,hall:12,bath:13,elevator:14,total_price:15,unit_price:16,parking_type:17,parking_area:18,parking_price:19,project_name:20,unit_no:21};
+const PALETTE=['#1a3a5c','#e8732a','#2a9d8f','#f4a261','#457b9d','#e63946','#06d6a0','#ffd166','#118ab2','#ef476f','#264653','#a8dadc','#e9c46a','#073b4c','#2a9d8f','#c77dff','#48cae4','#90be6d','#f3722c','#277da1'];
+let ALL=[], charts={}, selectedDist='';
+
+async function loadDataCharts(){
+  try{
+    const r=await fetch(SHARED_DATA_URL);
+    ALL=await r.json();
+    document.getElementById('loading').style.display='none';
+    renderAll();
+  }catch(e){
+    document.getElementById('loading').innerHTML='<div style="color:red;padding:20px">⚠️ 資料載入失敗，請確認 GitHub URL 設定正確</div>';
+  }
+}
+
+function renderAll(){
+  renderStats();
+  renderC1();
+  renderC2();
+  renderC3();
+  renderC4();
+  buildDistFilter();
+  renderC5('');
+}
+
+function renderStats(){
+  const ups=ALL.filter(r=>r[C.unit_price]>0).map(r=>r[C.unit_price]);
+  const avgUp=Math.round(ups.reduce((a,b)=>a+b,0)/ups.length);
+  // dist stats
+  const ds={};
+  ALL.forEach(r=>{
+    if(!ds[r[C.district]])ds[r[C.district]]={count:0,up_sum:0,up_n:0};
+    ds[r[C.district]].count++;
+    if(r[C.unit_price]>0){ds[r[C.district]].up_sum+=r[C.unit_price];ds[r[C.district]].up_n++;}
+  });
+  const sorted=Object.entries(ds).map(([d,s])=>({d,avg:s.up_n?Math.round(s.up_sum/s.up_n):0,count:s.count})).sort((a,b)=>b.avg-a.avg);
+  const topCount=Object.entries(ds).sort((a,b)=>b[1].count-a[1].count)[0];
+  document.getElementById('s-total').textContent=ALL.length.toLocaleString();
+  document.getElementById('s-avgup').textContent=avgUp.toLocaleString();
+  document.getElementById('s-topd').textContent=sorted[0].d;
+  document.getElementById('s-most').textContent=topCount[0];
+}
+
+function getDistStats(){
+  const ds={};
+  ALL.forEach(r=>{
+    const d=r[C.district];
+    if(!ds[d])ds[d]={count:0,up_sum:0,up_n:0};
+    ds[d].count++;
+    if(r[C.unit_price]>0){ds[d].up_sum+=r[C.unit_price];ds[d].up_n++;}
+  });
+  return Object.entries(ds).map(([d,s])=>({d,avg:s.up_n?Math.round(s.up_sum/s.up_n):0,count:s.count})).filter(x=>x.avg>0).sort((a,b)=>b.avg-a.avg);
+}
+
+function renderC1(){
+  const stats=getDistStats();
+  const ctx=document.getElementById('c1');
+  if(chartsW2.c1)chartsW2.c1.destroy();
+  chartsW2.c1=new Chart(ctx,{
+    type:'bar',
+    data:{labels:stats.map(s=>s.d),datasets:[{label:'均價(元/坪)',data:stats.map(s=>s.avg),backgroundColor:stats.map((_,i)=>PALETTE[i%PALETTE.length]),borderRadius:6}]},
+    options:{responsive:true,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>c.parsed.y.toLocaleString()+' 元/坪'}}},scales:{y:{ticks:{callback:v=>v.toLocaleString()},grid:{color:'#f0f0f0'}},x:{ticks:{font:{size:11}}}}}
+  });
+}
+
+function renderC2(){
+  const stats=getDistStats().sort((a,b)=>b.count-a.count);
+  const ctx=document.getElementById('c2');
+  if(chartsW2.c2)chartsW2.c2.destroy();
+  chartsW2.c2=new Chart(ctx,{
+    type:'doughnut',
+    data:{labels:stats.map(s=>s.d),datasets:[{data:stats.map(s=>s.count),backgroundColor:PALETTE}]},
+    options:{responsive:true,plugins:{legend:{position:'right',labels:{font:{size:10},boxWidth:10}}}}
+  });
+}
+
+function renderC3(){
+  const bt={};
+  ALL.forEach(r=>{const b=r[C.build_type]||'其他';bt[b]=(bt[b]||0)+1;});
+  const sorted=Object.entries(bt).sort((a,b)=>b[1]-a[1]);
+  const ctx=document.getElementById('c3');
+  if(chartsW2.c3)chartsW2.c3.destroy();
+  chartsW2.c3=new Chart(ctx,{
+    type:'bar',
+    data:{labels:sorted.map(b=>b[0]),datasets:[{label:'筆數',data:sorted.map(b=>b[1]),backgroundColor:'#2a9d8f',borderRadius:6}]},
+    options:{indexAxis:'y',responsive:true,plugins:{legend:{display:false}},scales:{x:{grid:{color:'#f0f0f0'}}}}
+  });
+}
+
+function renderC4(){
+  const bands=[[0,500],[500,1000],[1000,1500],[1500,2000],[2000,3000],[3000,5000],[5000,99999]];
+  const labels=['500萬以下','500-1000萬','1000-1500萬','1500-2000萬','2000-3000萬','3000-5000萬','5000萬以上'];
+  const counts=bands.map(([lo,hi])=>ALL.filter(r=>{const tp=r[C.total_price]/10000;return tp>=lo&&tp<hi;}).length);
+  const ctx=document.getElementById('c4');
+  if(chartsW2.c4)chartsW2.c4.destroy();
+  chartsW2.c4=new Chart(ctx,{
+    type:'bar',
+    data:{labels,datasets:[{label:'筆數',data:counts,backgroundColor:'#e8732a',borderRadius:6}]},
+    options:{responsive:true,plugins:{legend:{display:false}},scales:{y:{grid:{color:'#f0f0f0'}},x:{ticks:{font:{size:10}}}}}
+  });
+}
+
+function buildDistFilter(){
+  const dists=[''].concat([...new Set(ALL.map(r=>r[C.district]))].filter(Boolean).sort());
+  const wrap=document.getElementById('dist-filter');
+  wrap.innerHTML=dists.map(d=>`<button class="dist-btn${d===''?' active':''}" onclick="selectDist('${d}',this)">${d||'全部'}</button>`).join('');
+}
+
+function selectDist(d,btn){
+  selectedDist=d;
+  document.querySelectorAll('.dist-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderC5(d);
+}
+
+function renderC5(dist){
+  const data=dist?ALL.filter(r=>r[C.district]===dist):ALL;
+  const rm={};
+  data.forEach(r=>{const v=r[C.room];if(v>=0&&v<=6)rm[v]=(rm[v]||0)+1;});
+  const labels=['0房','1房','2房','3房','4房','5房','6房以上'];
+  const counts=[0,1,2,3,4,5,6].map(v=>rm[v]||0);
+  const ctx=document.getElementById('c5');
+  if(chartsW2.c5)chartsW2.c5.destroy();
+  chartsW2.c5=new Chart(ctx,{
+    type:'bar',
+    data:{labels,datasets:[{label:'筆數',data:counts,backgroundColor:['#adb5bd','#457b9d','#2a9d8f','#e8732a','#e63946','#f4a261','#264653'],borderRadius:6}]},
+    options:{responsive:true,plugins:{legend:{display:false}},scales:{y:{grid:{color:'#f0f0f0'}}}}
+  });
+}
+
+loadDataCharts();
+
+
+// !! REPLACE THIS URL WITH YOUR GITHUB RAW URL !!
+// DATA_URL_3 = shared;
+
+const C={district:0,unit_price:16,total_price:15,build_area:10,room:11,parking_price:19};
+let distStats={};
+
+async function loadDataCalc(){
+  try{
+    const r=await fetch(SHARED_DATA_URL);
+    const data=await r.json();
+    // compute district stats only
+    data.forEach(row=>{
+      const d=row[C.district];if(!d)return;
+      if(!distStats[d])distStats[d]={n:0,up_sum:0,up_n:0,tp_sum:0,up_min:Infinity,up_max:0};
+      const s=distStats[d];s.n++;
+      if(row[C.unit_price]>0){s.up_sum+=row[C.unit_price];s.up_n++;s.up_min=Math.min(s.up_min,row[C.unit_price]);s.up_max=Math.max(s.up_max,row[C.unit_price]);}
+      if(row[C.total_price]>0)s.tp_sum+=row[C.total_price];
+    });
+    Object.values(distStats).forEach(s=>{s.avg_up=s.up_n?Math.round(s.up_sum/s.up_n):0;s.avg_tp=s.n?Math.round(s.tp_sum/s.n/10000):0;if(s.up_min===Infinity)s.up_min=0;});
+    document.getElementById('loading').style.display='none';
+    populateDistSelect();
+    renderRefTable();
+  }catch(e){
+    document.getElementById('loading').innerHTML='<div style="color:red;padding:20px">⚠️ 資料載入失敗，請確認 GitHub URL 設定正確</div>';
+  }
+}
+
+function populateDistSelect(){
+  const sel=document.getElementById('a-dist');
+  Object.keys(distStats).sort().forEach(d=>{const o=document.createElement('option');o.value=o.textContent=d;sel.appendChild(o);});
+}
+
+function renderRefTable(){
+  const rows=Object.entries(distStats).sort((a,b)=>b[1].avg_up-a[1].avg_up);
+  const maxAvg=rows[0][1].avg_up;
+  document.getElementById('ref-tbody').innerHTML=rows.map(([d,s])=>`<tr>
+    <td><span class="dist-badge">${d}</span>${s.avg_up===maxAvg?'<span class="tag hot">最高</span>':''}</td>
+    <td>${s.n.toLocaleString()}</td>
+    <td class="top-dist">${s.avg_up.toLocaleString()}</td>
+    <td>${s.up_min.toLocaleString()}</td>
+    <td>${s.up_max.toLocaleString()}</td>
+    <td>${s.avg_tp.toLocaleString()}</td>
+  </tr>`).join('');
+}
+
+function aDistChange(){
+  const d=document.getElementById('a-dist').value;
+  const hint=document.getElementById('a-dist-hint');
+  if(d&&distStats[d]){
+    const s=distStats[d];
+    hint.textContent=`${d} 均價：${s.avg_up.toLocaleString()} 元/坪（最低 ${s.up_min.toLocaleString()}，最高 ${s.up_max.toLocaleString()}）`;
+    document.getElementById('a-up').value=s.avg_up;
+  }else hint.textContent='';
+  calcA();
+}
+
+function monthly(loanWan,rate=0.025,years=30){
+  const loan=loanWan*10000,r=rate/12,n=years*12;
+  return Math.round(loan*r*Math.pow(1+r,n)/(Math.pow(1+r,n)-1));
+}
+
+function calcA(){
+  const area=parseFloat(document.getElementById('a-area').value)||0;
+  const up=parseFloat(document.getElementById('a-up').value)||0;
+  const pk=parseFloat(document.getElementById('a-pk').value)||0;
+  const downPct=parseInt(document.getElementById('a-down').value)||20;
+  const years=parseInt(document.getElementById('a-years').value)||30;
+  if(!area||!up)return;
+  const houseWan=area*up/10000;
+  const totalWan=houseWan+pk;
+  const downWan=totalWan*downPct/100;
+  const loanWan=totalWan-downWan;
+  const mo=monthly(loanWan,0.025,years);
+  document.getElementById('a-r-house').textContent=houseWan.toFixed(1)+' 萬';
+  document.getElementById('a-r-total').textContent=totalWan.toFixed(1)+' 萬';
+  document.getElementById('a-r-down').textContent=downWan.toFixed(1)+' 萬';
+  document.getElementById('a-r-loan').textContent=loanWan.toFixed(1)+' 萬';
+  document.getElementById('a-r-monthly').textContent='約 '+mo.toLocaleString()+' 元';
+}
+
+function calcB(){
+  const tp=parseFloat(document.getElementById('b-tp').value)||0;
+  const area=parseFloat(document.getElementById('b-area').value)||0;
+  const pk=parseFloat(document.getElementById('b-pk').value)||0;
+  const income=parseFloat(document.getElementById('b-income').value)||0;
+  const downPct=parseInt(document.getElementById('b-down').value)||20;
+  const years=parseInt(document.getElementById('b-years').value)||30;
+  if(!tp||!area)return;
+  const houseWan=tp-pk;
+  const up=Math.round(houseWan*10000/area);
+  const downWan=tp*downPct/100;
+  const loanWan=tp-downWan;
+  const mo=monthly(loanWan,0.025,years);
+  document.getElementById('b-r-up').textContent=up.toLocaleString()+' 元/坪';
+  document.getElementById('b-r-down').textContent=downWan.toFixed(1)+' 萬';
+  document.getElementById('b-r-loan').textContent=loanWan.toFixed(1)+' 萬';
+  document.getElementById('b-r-monthly').textContent='約 '+mo.toLocaleString()+' 元';
+  if(income>0){
+    const moIncome=income*10000/12;
+    const burdenPct=Math.round(mo/moIncome*100);
+    const level=burdenPct<=30?'✅ 健康（≤30%）':burdenPct<=40?'⚠️ 偏高（30~40%）':'🔴 過高（>40%）';
+    document.getElementById('b-burden-note').textContent=`房貸負擔率：${burdenPct}%  ${level}`;
+  }else{
+    document.getElementById('b-burden-note').textContent='輸入年收入可試算房貸負擔率';
+  }
+}
+
+function switchTab(id,btn){
+  document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('tab-'+id).classList.add('active');
+  btn.classList.add('active');
+}
+
+loadDataCalc();
+
+
+const NB_CONFIG = {
+  hospital:{label:'醫院診所',emoji:'🏥',color:'#e53935',bg:'#ffebee'},
+  school:{label:'學校',emoji:'🎓',color:'#1976d2',bg:'#e3f2fd'},
+  supermarket:{label:'超市賣場',emoji:'🛒',color:'#2e7d32',bg:'#e8f5e9'},
+  subway:{label:'捷運站',emoji:'🚇',color:'#6a1b9a',bg:'#ede7f6'},
+  park:{label:'公園綠地',emoji:'🌳',color:'#1b5e20',bg:'#e8f5e9'},
+  bank:{label:'銀行',emoji:'🏦',color:'#e65100',bg:'#fff3e0'},
+};
+let nbMap,nbCenterMark,nbResults={},nbCurrentLat,nbCurrentLng,nbLayers={};
+
+function nbInitMap(lat,lng){
+  if(nbMap)nbMap.remove();
+  nbMap=L.map('nb-map').setView([lat,lng],15);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap',maxZoom:19}).addTo(nbMap);
+  Object.keys(NB_CONFIG).forEach(t=>{nbLayers[t]=L.layerGroup().addTo(nbMap);});
+}
+function nbMakeMarker(type){
+  const c=NB_CONFIG[type];
+  return L.divIcon({className:'',html:`<div style="background:${c.color};color:#fff;border-radius:50%;width:36px;height:36px;display:flex;align-items:center;justify-content:center;font-size:1.1rem;box-shadow:0 2px 8px rgba(0,0,0,.4);border:3px solid #fff">${c.emoji}</div>`,iconSize:[36,36],iconAnchor:[18,18]});
+}
+async function nbSearch(){
+  const addr=document.getElementById('nb-addr').value.trim();
+  if(!addr){alert('請輸入地址');return;}
+  nbSetLoading(true);
+  try{
+    const q=addr.includes('新北')?addr:'新北市 '+addr;
+    const res=await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=1&countrycodes=tw`,{headers:{'Accept-Language':'zh-TW'}});
+    const data=await res.json();
+    if(!data.length){alert('找不到此地址，請加上行政區，例：新北市板橋區…');nbSetLoading(false);return;}
+    nbCurrentLat=parseFloat(data[0].lat);
+    nbCurrentLng=parseFloat(data[0].lon);
+    nbInitMap(nbCurrentLat,nbCurrentLng);
+    if(nbCenterMark)nbMap.removeLayer(nbCenterMark);
+    nbCenterMark=L.marker([nbCurrentLat,nbCurrentLng],{icon:L.divIcon({className:'',html:`<div style="background:#1a3a5c;color:#fff;border-radius:50%;width:44px;height:44px;display:flex;align-items:center;justify-content:center;font-size:1.4rem;box-shadow:0 3px 12px rgba(0,0,0,.4);border:3px solid #fff">📍</div>`,iconSize:[44,44],iconAnchor:[22,22]})}).addTo(nbMap);
+    nbCenterMark.bindPopup(`<b>${addr}</b><br><small>查詢中心點</small>`).openPopup();
+    document.getElementById('nb-facility-bar').style.display='block';
+    document.getElementById('nb-main').style.display='grid';
+    nbResults={};
+    document.getElementById('nb-list').innerHTML='<div class="nb-empty">🔎 點擊「查詢周邊設施」開始搜尋</div>';
+    Object.keys(NB_CONFIG).forEach(t=>{const el=document.getElementById('fc-'+t);if(el)el.textContent='';});
+  }catch(e){alert('定位失敗，請確認網路連線');}
+  nbSetLoading(false);
+}
+function nbGetActiveTypes(){return[...document.querySelectorAll('.nb-fac.active')].map(b=>b.dataset.type);}
+async function nbQueryNearby(){
+  if(!nbCurrentLat){alert('請先定位地址');return;}
+  const types=nbGetActiveTypes();
+  if(!types.length){alert('請至少選擇一種設施');return;}
+  const radius=parseInt(document.getElementById('nb-radius').value);
+  document.getElementById('nb-btn-query').disabled=true;
+  document.getElementById('nb-list').innerHTML='<div class="nb-empty nb-pulse">⏳ 查詢中，請稍候…</div>';
+  Object.values(nbLayers).forEach(lg=>lg.clearLayers());
+  nbResults={};
+  let parts=[];
+  const qmap={hospital:['[amenity=hospital]','[amenity=clinic]','[amenity=doctors]'],school:['[amenity=school]','[amenity=university]','[amenity=college]','[amenity=kindergarten]'],supermarket:['[shop=supermarket]','[shop=convenience]'],subway:['[station=subway]','[amenity=subway_entrance]'],park:['[leisure=park]','[leisure=garden]'],bank:['[amenity=bank]','[amenity=atm]']};
+  types.forEach(type=>(qmap[type]||[]).forEach(q=>{parts.push(`node${q}(around:${radius},${nbCurrentLat},${nbCurrentLng});`);parts.push(`way${q}(around:${radius},${nbCurrentLat},${nbCurrentLng});`);}));
+  const oq=`[out:json][timeout:25];(${parts.join('')});out center;`;
+  try{
+    let data;
+    try{const r=await fetch('https://overpass-api.de/api/interpreter',{method:'POST',body:oq});data=await r.json();}
+    catch{const r2=await fetch('https://overpass.kumi.systems/api/interpreter',{method:'POST',body:oq});data=await r2.json();}
+    nbProcess(data.elements,types,radius);
+  }catch(e){document.getElementById('nb-list').innerHTML='<div class="nb-empty">❌ 查詢失敗，請稍後再試</div>';}
+  document.getElementById('nb-btn-query').disabled=false;
+}
+function nbClassify(el,types){
+  const t=el.tags||{};
+  for(const type of types){
+    if(type==='hospital'&&(t.amenity==='hospital'||t.amenity==='clinic'||t.amenity==='doctors'||t.healthcare))return type;
+    if(type==='school'&&(t.amenity==='school'||t.amenity==='university'||t.amenity==='college'||t.amenity==='kindergarten'))return type;
+    if(type==='supermarket'&&(t.shop==='supermarket'||t.shop==='convenience'))return type;
+    if(type==='subway'&&(t.station==='subway'||t.amenity==='subway_entrance'))return type;
+    if(type==='park'&&(t.leisure==='park'||t.leisure==='garden'))return type;
+    if(type==='bank'&&(t.amenity==='bank'||t.amenity==='atm'))return type;
+  }return null;
+}
+function nbDist(a,b,c,d){const R=6371000,dL=(c-a)*Math.PI/180,dO=(d-b)*Math.PI/180,x=Math.sin(dL/2)**2+Math.cos(a*Math.PI/180)*Math.cos(c*Math.PI/180)*Math.sin(dO/2)**2;return Math.round(R*2*Math.atan2(Math.sqrt(x),Math.sqrt(1-x)));}
+function nbProcess(elements,types,radius){
+  const seen=new Set();
+  types.forEach(t=>{nbResults[t]=[];});
+  elements.forEach(el=>{
+    const lat=el.lat||(el.center&&el.center.lat),lng=el.lon||(el.center&&el.center.lon);
+    if(!lat||!lng)return;
+    const name=el.tags?.name||el.tags?.['name:zh']||'';
+    if(!name)return;
+    const key=name+lat+lng;if(seen.has(key))return;seen.add(key);
+    const type=nbClassify(el,types);if(!type)return;
+    const dist=nbDist(nbCurrentLat,nbCurrentLng,lat,lng);if(dist>radius)return;
+    nbResults[type].push({name,lat,lng,dist,type});
+  });
+  types.forEach(type=>{
+    nbResults[type].sort((a,b)=>a.dist-b.dist);
+    nbResults[type].forEach(item=>{
+      const mk=L.marker([item.lat,item.lng],{icon:nbMakeMarker(type)}).addTo(nbLayers[type]);
+      mk.bindPopup(`<b>${item.name}</b><br><span style="color:${NB_CONFIG[type].color}">${NB_CONFIG[type].label}</span><br>📏 <b>${item.dist}m</b>`);
+    });
+    const el=document.getElementById('fc-'+type);
+    if(el)el.textContent=(nbResults[type].length||0)+'筆';
+  });
+  const total=Object.values(nbResults).flat().length;
+  document.getElementById('nb-total-badge').textContent=total+' 筆';
+  nbRenderTabs(types);nbRenderList('all',types);
+}
+function nbRenderTabs(types){
+  const total=Object.values(nbResults).flat().length;
+  let h=`<button class="nb-cat-tab" style="background:#1a3a5c;color:#fff" onclick="nbSwitchTab('all',this)">全部 ${total}</button>`;
+  types.forEach(t=>{const n=(nbResults[t]||[]).length;if(n>0)h+=`<button class="nb-cat-tab" style="background:${NB_CONFIG[t].bg};color:${NB_CONFIG[t].color}" onclick="nbSwitchTab('${t}',this)">${NB_CONFIG[t].emoji} ${NB_CONFIG[t].label} ${n}</button>`;});
+  document.getElementById('nb-cat-tabs').innerHTML=h;
+}
+function nbSwitchTab(tab,btn){
+  document.querySelectorAll('.nb-cat-tab').forEach(b=>{b.style.opacity='.6';b.style.fontWeight='600';});
+  btn.style.opacity='1';btn.style.fontWeight='800';
+  const types=Object.keys(NB_CONFIG);
+  nbRenderList(tab,types);
+}
+function nbRenderList(tab,types){
+  const items=tab==='all'?Object.values(nbResults).flat().sort((a,b)=>a.dist-b.dist):(nbResults[tab]||[]);
+  if(!items.length){document.getElementById('nb-list').innerHTML='<div class="nb-empty">此範圍內未找到設施<br><small>可擴大搜尋半徑</small></div>';return;}
+  document.getElementById('nb-list').innerHTML=items.map(item=>{
+    const c=NB_CONFIG[item.type],dist=item.dist<1000?item.dist+'m':(item.dist/1000).toFixed(1)+'km';
+    return`<div class="nb-item" onclick="nbFlyTo(${item.lat},${item.lng},'${item.type}')">
+      <div class="nb-item-icon" style="background:${c.bg}">${c.emoji}</div>
+      <div style="flex:1;min-width:0">
+        <div class="nb-item-name">${item.name}</div>
+        <span class="nb-item-type" style="background:${c.bg};color:${c.color}">${c.label}</span>
+      </div>
+      <div class="nb-item-dist">${dist}</div>
+    </div>`;
+  }).join('');
+}
+function nbFlyTo(lat,lng,type){
+  nbMap.flyTo([lat,lng],17,{duration:.8});
+  setTimeout(()=>{nbLayers[type].eachLayer(mk=>{const p=mk.getLatLng();if(Math.abs(p.lat-lat)<0.0001&&Math.abs(p.lng-lng)<0.0001)mk.openPopup();});},900);
+}
+function nbToggleFac(btn){btn.classList.toggle('active');}
+function nbSetLoading(on){
+  document.getElementById('nb-btn-loc').disabled=on;
+  document.getElementById('nb-btn-txt').textContent=on?'⏳ 定位中…':'🔍 定位搜尋';
+}
+
+window.onload=function(){init();};
 </script>
 </body>
 </html>
